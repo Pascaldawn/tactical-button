@@ -40,20 +40,20 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link 
-                  to="/dashboard" 
+                  to="/board" 
                   className={`font-medium transition-colors hover:text-primary ${
-                    location.pathname === '/dashboard' ? 'text-primary' : 'text-foreground'
-                  }`}
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/tactics" 
-                  className={`font-medium transition-colors hover:text-primary ${
-                    location.pathname === '/tactics' ? 'text-primary' : 'text-foreground'
+                    location.pathname === '/board' ? 'text-primary' : 'text-foreground'
                   }`}
                 >
                   Tactics Board
+                </Link>
+                <Link 
+                  to="/subscription" 
+                  className={`font-medium transition-colors hover:text-primary ${
+                    location.pathname === '/subscription' ? 'text-primary' : 'text-foreground'
+                  }`}
+                >
+                  Subscription
                 </Link>
                 <div className="relative inline-block text-left">
                   <button 
@@ -107,18 +107,18 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link
-                  to="/dashboard"
-                  className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/tactics"
+                  to="/board"
                   className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
                   onClick={closeMenu}
                 >
                   Tactics Board
+                </Link>
+                <Link
+                  to="/subscription"
+                  className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
+                  onClick={closeMenu}
+                >
+                  Subscription
                 </Link>
                 <div className="border-t border-border mt-2 pt-2">
                   <div className="px-3 py-2 font-medium">

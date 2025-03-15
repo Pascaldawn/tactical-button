@@ -6,8 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import TacticsBoard from "./pages/TacticsBoard";
+import Board from "./pages/board";
+import Subscription from "./pages/subscription";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
@@ -24,8 +24,8 @@ const App = () => (
           <Navbar />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/tactics" element={<TacticsBoard />} />
+            <Route path="/board" element={<Board />} />
+            <Route path="/subscription" element={<Subscription />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
