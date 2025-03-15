@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Pencil, Eraser, Move, Trash2 } from 'lucide-react';
 
@@ -27,10 +28,10 @@ const DrawingTools: React.FC<DrawingToolsProps> = ({
   const colors = ['#FFFFFF', '#FF0000', '#0000FF', '#FFFF00', '#000000'];
   
   return (
-    <div className="glass-panel p-3 md:p-4 flex flex-wrap gap-2 md:gap-4 items-center animate-fade-in">
+    <div className="bg-background/80 backdrop-blur-sm border border-border rounded-lg p-3 md:p-4 flex flex-wrap gap-2 md:gap-4 items-center">
       <div className="flex gap-2">
         <button
-          className={`tool-button ${!isDrawingMode ? 'active' : ''}`}
+          className={`p-2 rounded ${!isDrawingMode ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
           onClick={() => {
             onToggleDrawingMode();
             setActiveDrawingTool('move');
@@ -41,7 +42,7 @@ const DrawingTools: React.FC<DrawingToolsProps> = ({
         </button>
         
         <button
-          className={`tool-button ${isDrawingMode && activeDrawingTool === 'pen' ? 'active' : ''}`}
+          className={`p-2 rounded ${isDrawingMode && activeDrawingTool === 'pen' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
           onClick={() => {
             if (!isDrawingMode) onToggleDrawingMode();
             setActiveDrawingTool('pen');
@@ -52,7 +53,7 @@ const DrawingTools: React.FC<DrawingToolsProps> = ({
         </button>
         
         <button
-          className={`tool-button ${isDrawingMode && activeDrawingTool === 'eraser' ? 'active' : ''}`}
+          className={`p-2 rounded ${isDrawingMode && activeDrawingTool === 'eraser' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}
           onClick={() => {
             if (!isDrawingMode) onToggleDrawingMode();
             setActiveDrawingTool('eraser');
@@ -100,7 +101,7 @@ const DrawingTools: React.FC<DrawingToolsProps> = ({
       <div className="h-6 border-l border-border mx-1"></div>
       
       <button
-        className="tool-button text-destructive"
+        className="p-2 rounded bg-destructive text-destructive-foreground"
         onClick={onClearCanvas}
         title="Clear Canvas"
       >

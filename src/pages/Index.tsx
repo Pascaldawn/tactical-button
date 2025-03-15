@@ -1,196 +1,100 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, CheckCircle2, Users, Clock, Laptop, LucideProps } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { ChalkboardUser, ShieldCheck, Video, Zap } from 'lucide-react';
 
-const FeatureIcon: React.FC<LucideProps & { className?: string }> = ({ className, ...props }) => (
-  <div className={`rounded-full p-2 bg-primary/10 text-primary ${className}`}>
-    {React.createElement(props.icon || 'div', { size: 24 })}
-  </div>
-);
+const Index = () => {
+  const { isAuthenticated } = useAuth();
 
-const Index: React.FC = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/5 to-transparent pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4 animate-fade-in">
-              Revolutionize your coaching strategy
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Create, visualize and share football tactics
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              An intuitive platform for coaches and players to design and collaborate on football strategies.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <Link to="/auth" className="btn-primary">
-                Get Started
-              </Link>
-              <Link to="/tactics" className="btn-secondary">
-                Try the Tactics Board
-              </Link>
-            </div>
-          </div>
+      <section className="relative py-20 px-4 md:px-8 lg:py-32 bg-gradient-to-b from-primary/10 to-background">
+        <div className="max-w-6xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Football Tactics Board
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 text-muted-foreground max-w-3xl mx-auto">
+            Create, edit, and share your football strategies with our interactive tactics board
+          </p>
           
-          <div className="mt-16 relative animate-scale-in" style={{ animationDelay: '0.4s' }}>
-            <div className="aspect-video max-w-4xl mx-auto rounded-lg overflow-hidden shadow-2xl">
-              <div className="w-full h-full bg-field relative">
-                <div className="absolute inset-0 bg-field-pattern"></div>
-                <div className="absolute top-1/2 left-1/4 w-12 h-12 rounded-full bg-players-team1 flex items-center justify-center text-white font-bold">10</div>
-                <div className="absolute top-1/3 left-1/2 w-12 h-12 rounded-full bg-players-team1 flex items-center justify-center text-white font-bold">7</div>
-                <div className="absolute top-2/3 right-1/4 w-12 h-12 rounded-full bg-players-team2 flex items-center justify-center text-white font-bold">4</div>
-                <svg className="absolute top-0 left-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M120,100 C200,140 280,160 380,120" stroke="white" strokeWidth="3" fill="none" strokeDasharray="8,8" />
-                  <path d="M120,100 C220,90 320,140 330,220" stroke="red" strokeWidth="3" fill="none" />
-                </svg>
-              </div>
-            </div>
-            <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 glass-panel px-6 py-4 flex flex-col sm:flex-row items-center gap-4 shadow-md">
-              <p className="font-medium">Ready to elevate your strategy?</p>
-              <Link to="/auth" className="flex items-center text-primary font-medium">
-                <span>Start creating now</span>
-                <ChevronRight size={16} className="ml-1" />
-              </Link>
-            </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            {isAuthenticated ? (
+              <Button asChild size="lg">
+                <Link to="/board">Go to Tactics Board</Link>
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link to="/auth">Get Started</Link>
+              </Button>
+            )}
+            <Button asChild size="lg" variant="secondary">
+              <Link to="/subscription">View Plans</Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Powerful Features for Modern Coaching</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to design, analyze, and share your football strategies.
-            </p>
-          </div>
-
+      <section className="py-16 px-4 md:px-8">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Powerful Features for Coaches
+          </h2>
+          
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="glass-panel p-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <FeatureIcon icon={Laptop} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Interactive Tactics Board</h3>
-              <p className="text-muted-foreground mb-4">
-                Drag-and-drop player icons, draw plays, and create dynamic formations with our intuitive interface.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Easy player positioning</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Drawing tools with multiple colors</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Export plays as images</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="glass-panel p-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <FeatureIcon icon={Users} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Team Collaboration</h3>
-              <p className="text-muted-foreground mb-4">
-                Share tactics with your team and work together to develop winning strategies.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Coach and player accounts</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Real-time collaboration</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Permission management</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="glass-panel p-6 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <FeatureIcon icon={Clock} className="mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Video Integration</h3>
-              <p className="text-muted-foreground mb-4">
-                Combine tactical diagrams with video analysis for comprehensive coaching.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Video upload and playback</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Sync diagrams with video</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle2 size={16} className="text-accent mr-2" />
-                  <span>Create coaching points</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-panel p-8 md:p-12 relative overflow-hidden">
-            <div className="absolute right-0 bottom-0 w-1/2 h-full bg-primary/5 rounded-l-full transform translate-x-1/4 -z-10"></div>
-            
-            <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold mb-4">Ready to transform your football strategy?</h2>
-              <p className="text-xl text-muted-foreground mb-8">
-                Join coaches and teams who are already using our platform to develop winning tactics.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/auth" className="btn-primary">
-                  Get Started Free
-                </Link>
-                <Link to="#" className="btn-secondary">
-                  Watch Demo
-                </Link>
+            {/* Feature 1 */}
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
+              <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <ChalkboardUser className="text-primary" size={24} />
               </div>
+              <h3 className="text-xl font-semibold mb-2">Interactive Board</h3>
+              <p className="text-muted-foreground">
+                Drag-and-drop player icons to create formations and plays with our intuitive tactics board
+              </p>
+            </div>
+            
+            {/* Feature 2 */}
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
+              <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Video className="text-primary" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Video Integration</h3>
+              <p className="text-muted-foreground">
+                Upload training videos and sync them with your tactics for comprehensive coaching sessions
+              </p>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
+              <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
+                <Zap className="text-primary" size={24} />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Real-time Collaboration</h3>
+              <p className="text-muted-foreground">
+                Work together with your coaching staff and players in real-time on the same tactics board
+              </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-secondary/30 py-10 border-t border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="font-bold text-lg">Football Tactics</p>
-              <p className="text-sm text-muted-foreground">© 2023 All rights reserved</p>
-            </div>
-            
-            <div className="flex space-x-6">
-              <Link to="/auth" className="text-muted-foreground hover:text-foreground transition-colors">
-                Sign In
-              </Link>
-              <Link to="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                Features
-              </Link>
-              <Link to="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                Pricing
-              </Link>
-              <Link to="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                Support
-              </Link>
-            </div>
-          </div>
+      
+      {/* CTA Section */}
+      <section className="py-16 px-4 md:px-8 bg-primary/5">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Elevate Your Coaching?</h2>
+          <p className="text-xl mb-8 text-muted-foreground">
+            Join thousands of coaches who are improving their team's performance with our tactics board
+          </p>
+          <Button asChild size="lg">
+            <Link to={isAuthenticated ? "/board" : "/auth"}>
+              {isAuthenticated ? "Go to Tactics Board" : "Get Started Now"}
+            </Link>
+          </Button>
         </div>
-      </footer>
+      </section>
     </div>
   );
 };

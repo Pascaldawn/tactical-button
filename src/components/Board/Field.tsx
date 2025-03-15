@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import PlayerIcon from './PlayerIcon';
 
@@ -141,41 +142,41 @@ const Field: React.FC<FieldProps> = ({
   const SoccerFieldMarkup = () => (
     <>
       {/* Center circle */}
-      <div className="absolute top-1/2 left-1/2 w-1/5 h-1/10 transform -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-field-lines opacity-70"></div>
+      <div className="absolute top-1/2 left-1/2 w-1/5 h-1/10 transform -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white opacity-70"></div>
       
       {/* Center line */}
-      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-field-lines opacity-70 transform -translate-y-1/2"></div>
+      <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white opacity-70 transform -translate-y-1/2"></div>
       
       {/* Center spot */}
-      <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-field-lines rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
       
       {/* Goal boxes */}
-      <div className="absolute top-0 left-1/4 w-1/2 h-1/10 border-2 border-t-0 border-field-lines opacity-70"></div>
-      <div className="absolute bottom-0 left-1/4 w-1/2 h-1/10 border-2 border-b-0 border-field-lines opacity-70"></div>
+      <div className="absolute top-0 left-1/4 w-1/2 h-1/10 border-2 border-t-0 border-white opacity-70"></div>
+      <div className="absolute bottom-0 left-1/4 w-1/2 h-1/10 border-2 border-b-0 border-white opacity-70"></div>
       
       {/* Penalty boxes */}
-      <div className="absolute top-0 left-1/6 w-2/3 h-1/6 border-2 border-t-0 border-field-lines opacity-70"></div>
-      <div className="absolute bottom-0 left-1/6 w-2/3 h-1/6 border-2 border-b-0 border-field-lines opacity-70"></div>
+      <div className="absolute top-0 left-1/6 w-2/3 h-1/6 border-2 border-t-0 border-white opacity-70"></div>
+      <div className="absolute bottom-0 left-1/6 w-2/3 h-1/6 border-2 border-b-0 border-white opacity-70"></div>
       
       {/* Penalty spots */}
-      <div className="absolute top-1/8 left-1/2 w-2 h-2 bg-field-lines rounded-full transform -translate-x-1/2"></div>
-      <div className="absolute bottom-1/8 left-1/2 w-2 h-2 bg-field-lines rounded-full transform -translate-x-1/2"></div>
+      <div className="absolute top-1/8 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
+      <div className="absolute bottom-1/8 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
       
       {/* Corner arcs */}
-      <div className="absolute top-0 left-0 w-4 h-4 border-r-2 border-field-lines opacity-70 rounded-br-full"></div>
-      <div className="absolute top-0 right-0 w-4 h-4 border-l-2 border-field-lines opacity-70 rounded-bl-full"></div>
-      <div className="absolute bottom-0 left-0 w-4 h-4 border-r-2 border-field-lines opacity-70 rounded-tr-full"></div>
-      <div className="absolute bottom-0 right-0 w-4 h-4 border-l-2 border-field-lines opacity-70 rounded-tl-full"></div>
+      <div className="absolute top-0 left-0 w-4 h-4 border-r-2 border-white opacity-70 rounded-br-full"></div>
+      <div className="absolute top-0 right-0 w-4 h-4 border-l-2 border-white opacity-70 rounded-bl-full"></div>
+      <div className="absolute bottom-0 left-0 w-4 h-4 border-r-2 border-white opacity-70 rounded-tr-full"></div>
+      <div className="absolute bottom-0 right-0 w-4 h-4 border-l-2 border-white opacity-70 rounded-tl-full"></div>
     </>
   );
 
   return (
     <div 
       ref={fieldRef}
-      className="field-container relative select-none"
+      className="relative w-full h-full bg-green-600 rounded-lg overflow-hidden select-none"
     >
       {/* Field pattern */}
-      <div className="field-pattern"></div>
+      <div className="absolute inset-0 bg-green-700 opacity-10 bg-stripes"></div>
       
       {/* Field markings */}
       <div className="absolute inset-0">
@@ -185,7 +186,7 @@ const Field: React.FC<FieldProps> = ({
       {/* Drawing canvas */}
       <canvas
         ref={canvasRef}
-        className={`drawing-canvas ${drawingMode ? 'cursor-crosshair' : 'pointer-events-none'}`}
+        className={`absolute inset-0 w-full h-full ${drawingMode ? 'cursor-crosshair' : 'pointer-events-none'}`}
         onMouseDown={startDrawing}
         onMouseMove={draw}
         onMouseUp={endDrawing}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Field from '../components/Board/Field';
 import DrawingTools from '../components/Board/DrawingTools';
+import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 
 // Sample data for players
@@ -82,23 +83,23 @@ const Board = () => {
           <h1 className="text-2xl font-bold">Tactics Board</h1>
           
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               onClick={handleSaveTactic}
-              className="btn-primary"
+              variant="default"
             >
               Save Tactic
-            </button>
+            </Button>
             
-            <button
+            <Button
               onClick={handleExportImage}
-              className="btn-secondary"
+              variant="secondary"
             >
               Export as Image
-            </button>
+            </Button>
           </div>
         </div>
         
-        <div className="glass-panel p-1 mb-4">
+        <div className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-1 mb-4">
           <DrawingTools
             isDrawingMode={drawingMode}
             onToggleDrawingMode={handleToggleDrawingMode}
@@ -112,7 +113,7 @@ const Board = () => {
           />
         </div>
         
-        <div className="glass-panel p-1 aspect-[16/9] w-full overflow-hidden">
+        <div className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-1 aspect-[16/9] w-full overflow-hidden">
           <Field
             players={players}
             onPlayersChange={handlePlayersChange}

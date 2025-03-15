@@ -1,108 +1,119 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { CheckCircle } from 'lucide-react';
+
+const SubscriptionPlans = [
+  {
+    id: 'monthly',
+    name: 'Monthly',
+    price: '$9.99',
+    period: 'per month',
+    features: [
+      'Interactive Tactics Board',
+      'Basic Team Management',
+      'Export as Images',
+      'Save up to 10 Tactics',
+    ],
+    btnText: 'Subscribe Monthly',
+  },
+  {
+    id: 'yearly',
+    name: 'Yearly',
+    price: '$99.99',
+    period: 'per year',
+    popular: true,
+    features: [
+      'Interactive Tactics Board',
+      'Advanced Team Management',
+      'Export as Images and Videos',
+      'Unlimited Saved Tactics',
+      'Video Integration',
+      'Priority Support',
+    ],
+    btnText: 'Subscribe Yearly',
+  },
+];
 
 const Subscription = () => {
-  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
+  const { isAuthenticated } = useAuth();
+
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate('/auth');
-      toast.error('Please sign in to view subscription options');
+      toast.error('Please sign in to view subscription plans');
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubscribe = (plan) => {
-    toast.info(`Redirecting to Payoneer for ${plan} subscription...`);
-    // In a real implementation, this would redirect to Payoneer payment gateway
-    setTimeout(() => {
-      toast('This is a frontend demo - backend integration with Payoneer needed for actual implementation');
-    }, 2000);
+  const handleSubscribe = (planId) => {
+    toast.success(`Redirecting to Payoneer for ${planId} subscription...`);
+    // This would redirect to Payoneer payment in a real app
   };
 
-  const plans = [
-    {
-      name: 'Monthly',
-      price: '$9.99',
-      period: 'per month',
-      features: [
-        'Interactive tactics board',
-        'Save up to 10 tactics',
-        'Basic drawing tools',
-        'Export as image'
-      ]
-    },
-    {
-      name: 'Yearly',
-      price: '$99.99',
-      period: 'per year',
-      features: [
-        'Interactive tactics board',
-        'Unlimited tactics',
-        'Advanced drawing tools',
-        'Export as image or video',
-        'Team collaboration',
-        'Video integration',
-        '24/7 support'
-      ],
-      highlight: true
-    }
-  ];
-
   return (
-    <div className="min-h-screen pt-20 px-4 animate-fade-in">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">Choose Your Plan</h1>
-        <p className="text-center text-muted-foreground mb-12">
-          Unlock premium features with a subscription
-        </p>
+    <div className="min-h-screen pt-16 px-4 animate-fade-in">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold mb-2">Subscription Plans</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Choose a plan that works for your team. All payments are processed securely through Payoneer.
+          </p>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {plans.map((plan) => (
-            <div 
-              key={plan.name}
-              className={`glass-panel p-8 rounded-lg flex flex-col ${
-                plan.highlight ? 'border-2 border-primary ring-2 ring-primary/20' : ''
-              }`}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {SubscriptionPlans.map((plan) => (
+            <Card 
+              key={plan.id} 
+              className={`relative ${plan.popular ? 'border-primary' : ''}`}
             >
-              {plan.highlight && (
-                <div className="bg-primary text-primary-foreground text-sm font-medium py-1 px-3 rounded-full self-start mb-4">
-                  Best Value
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                  Most Popular
                 </div>
               )}
               
-              <h3 className="text-2xl font-bold">{plan.name}</h3>
-              <div className="mt-2 mb-6">
-                <span className="text-3xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground"> {plan.period}</span>
-              </div>
+              <CardHeader>
+                <CardTitle>{plan.name}</CardTitle>
+                <CardDescription>
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground"> {plan.period}</span>
+                </CardDescription>
+              </CardHeader>
               
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex">
-                    <CheckCircle className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <CardContent>
+                <ul className="space-y-2">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-2" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
               
-              <button
-                onClick={() => handleSubscribe(plan.name)}
-                className={`mt-auto ${plan.highlight ? 'btn-primary' : 'btn-secondary'}`}
-              >
-                Subscribe with Payoneer
-              </button>
-            </div>
+              <CardFooter>
+                <Button 
+                  className="w-full"
+                  variant={plan.popular ? 'default' : 'outline'}
+                  onClick={() => handleSubscribe(plan.id)}
+                >
+                  {plan.btnText}
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
         
         <div className="mt-12 text-center text-sm text-muted-foreground">
-          <p>All payments are processed securely through Payoneer.</p>
-          <p className="mt-1">Cancel your subscription at any time.</p>
+          <p>
+            All payments are processed securely through Payoneer. 
+            You can cancel your subscription at any time.
+          </p>
         </div>
       </div>
     </div>
