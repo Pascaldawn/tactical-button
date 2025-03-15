@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { Presentation, ShieldCheck, Video, Zap } from 'lucide-react';
+import { Presentation, ShieldCheck, Video } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -44,7 +44,7 @@ const Index = () => {
             Powerful Features for Coaches
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-8">
             {/* Feature 1 */}
             <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
               <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
@@ -64,17 +64,6 @@ const Index = () => {
               <h3 className="text-xl font-semibold mb-2">Video Integration</h3>
               <p className="text-muted-foreground">
                 Upload training videos and sync them with your tactics for comprehensive coaching sessions
-              </p>
-            </div>
-            
-            {/* Feature 3 */}
-            <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
-              <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                <Zap className="text-primary" size={24} />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Real-time Collaboration</h3>
-              <p className="text-muted-foreground">
-                Work together with your coaching staff and players in real-time on the same tactics board
               </p>
             </div>
           </div>
