@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { ChalkboardUser, ShieldCheck, Video, Zap } from 'lucide-react';
+import { Presentation, ShieldCheck, Video, Zap } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -48,7 +48,7 @@ const Index = () => {
             {/* Feature 1 */}
             <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300">
               <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                <ChalkboardUser className="text-primary" size={24} />
+                <Presentation className="text-primary" size={24} />
               </div>
               <h3 className="text-xl font-semibold mb-2">Interactive Board</h3>
               <p className="text-muted-foreground">
