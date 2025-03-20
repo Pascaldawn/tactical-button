@@ -1,5 +1,30 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+
+// Firebase configuration - normally would be in environment variables
+const firebaseConfig = {
+  apiKey: "AIzaSyBtKoMqY_fHxFbxkR7uHGedwvTw4YZpgr0",
+  authDomain: "football-tactics-app.firebaseapp.com",
+  projectId: "football-tactics-app",
+  storageBucket: "football-tactics-app.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890abcdef"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 type User = {
   id: string;
@@ -24,33 +49,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Get additional user data from Firestore
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName || userData.name || '',
+              role: userData.role || 'coach'
+            });
+          } else {
+            // Fallback if no user document exists
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName || '',
+              role: 'coach'
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    // For demo purposes, we're using mock authentication
-    // In a real app, this would call your backend API
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
       
-      // Mock successful login with sample user
-      const mockUser = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role: 'coach' as const
-      };
+      // Get additional user data from Firestore
+      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || userData.name || '',
+          role: userData.role || 'coach'
+        });
+      }
       
     } catch (error) {
       console.error('Login error:', error);
@@ -64,19 +116,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
       
-      // Mock successful signup
-      const mockUser = {
-        id: '1',
+      // Update profile with display name
+      await updateProfile(firebaseUser, { displayName: name });
+      
+      // Store additional user data in Firestore
+      await setDoc(doc(db, "users", firebaseUser.uid), {
+        name,
         email,
+        role,
+        createdAt: new Date().toISOString()
+      });
+      
+      setUser({
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
         name,
         role
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      });
       
     } catch (error) {
       console.error('Signup error:', error);
@@ -86,9 +146,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

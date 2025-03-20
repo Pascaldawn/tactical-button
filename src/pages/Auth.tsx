@@ -9,7 +9,6 @@ const Auth: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'coach' | 'player'>('coach');
   const [isLoading, setIsLoading] = useState(false);
   
   const { login, signup } = useAuth();
@@ -24,7 +23,7 @@ const Auth: React.FC = () => {
         await login(email, password);
         toast.success('Login successful');
       } else {
-        await signup(name, email, password, role);
+        await signup(name, email, password, 'coach');
         toast.success('Account created successfully');
       }
       navigate('/dashboard');
@@ -90,36 +89,6 @@ const Auth: React.FC = () => {
               placeholder="••••••••"
             />
           </div>
-          
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                I am a
-              </label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="role"
-                    checked={role === 'coach'}
-                    onChange={() => setRole('coach')}
-                    className="mr-2"
-                  />
-                  Coach
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="role"
-                    checked={role === 'player'}
-                    onChange={() => setRole('player')}
-                    className="mr-2"
-                  />
-                  Player
-                </label>
-              </div>
-            </div>
-          )}
           
           <button
             type="submit"

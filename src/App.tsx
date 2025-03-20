@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Board from "./pages/board";
 import Subscription from "./pages/subscription";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/dashboard";
+import Settings from "./pages/settings";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
 
@@ -29,6 +31,8 @@ const App = () => (
               <Route path="/board" element={<Board />} />
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

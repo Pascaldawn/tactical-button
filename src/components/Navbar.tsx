@@ -1,20 +1,33 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+    closeMenu();
+    setIsProfileMenuOpen(false);
   };
 
   return (
@@ -40,6 +53,14 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link 
+                  to="/dashboard" 
+                  className={`font-medium transition-colors hover:text-primary ${
+                    location.pathname === '/dashboard' ? 'text-primary' : 'text-foreground'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link 
                   to="/board" 
                   className={`font-medium transition-colors hover:text-primary ${
                     location.pathname === '/board' ? 'text-primary' : 'text-foreground'
@@ -58,17 +79,39 @@ const Navbar: React.FC = () => {
                 <div className="relative inline-block text-left">
                   <button 
                     className="flex items-center space-x-2 text-foreground hover:text-primary transition-colors"
+                    onClick={toggleProfileMenu}
                   >
                     <User size={18} />
                     <span>{user?.name}</span>
                   </button>
-                  <button 
-                    onClick={logout} 
-                    className="ml-4 flex items-center space-x-1 text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <LogOut size={18} />
-                    <span className="text-sm">Logout</span>
-                  </button>
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-background shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="py-1">
+                        <Link 
+                          to="/dashboard" 
+                          className="block px-4 py-2 text-sm hover:bg-secondary"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          Dashboard
+                        </Link>
+                        <Link 
+                          to="/settings" 
+                          className="block px-4 py-2 text-sm hover:bg-secondary"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <Settings size={16} className="inline mr-2" />
+                          Account Settings
+                        </Link>
+                        <button 
+                          onClick={handleLogout} 
+                          className="block w-full text-left px-4 py-2 text-sm text-destructive hover:bg-secondary"
+                        >
+                          <LogOut size={16} className="inline mr-2" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -107,6 +150,13 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
+                  onClick={closeMenu}
+                >
+                  Dashboard
+                </Link>
+                <Link
                   to="/board"
                   className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
                   onClick={closeMenu}
@@ -120,16 +170,21 @@ const Navbar: React.FC = () => {
                 >
                   Subscription
                 </Link>
+                <Link
+                  to="/settings"
+                  className="block px-3 py-2 rounded-md font-medium hover:bg-secondary"
+                  onClick={closeMenu}
+                >
+                  <Settings size={16} className="inline mr-2" />
+                  Account Settings
+                </Link>
                 <div className="border-t border-border mt-2 pt-2">
                   <div className="px-3 py-2 font-medium">
                     <User size={16} className="inline mr-2" />
                     {user?.name}
                   </div>
                   <button
-                    onClick={() => {
-                      logout();
-                      closeMenu();
-                    }}
+                    onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-destructive font-medium flex items-center"
                   >
                     <LogOut size={16} className="mr-2" />
