@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Board from '../components/Board/Board';
@@ -9,12 +9,16 @@ const BoardPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
+  // Removed the authentication redirect for now so you can access the board
+  // This would normally be here to protect the route
+  /*
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/auth');
       toast.error('Please sign in to access the tactics board');
     }
   }, [isAuthenticated, navigate]);
+  */
   
   return (
     <div className="min-h-screen pt-16 px-4 animate-fade-in">
