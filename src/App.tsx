@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import Board from "./pages/board";
 import Subscription from "./pages/subscription";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard"; // Updated to correct case
+import Dashboard from "./pages/dashboard"; // Using lowercase version
 import Settings from "./pages/settings";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
