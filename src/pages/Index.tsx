@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { Presentation, ShieldCheck, Video } from 'lucide-react';
+import { Presentation, ShieldCheck, ArrowRight, ArrowUpRight, ArrowDown } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -20,6 +20,10 @@ const Index = () => {
         <div className="absolute top-1/3 right-20 w-8 h-8 rounded-full bg-players-team2 shadow-lg opacity-70 hidden md:block"></div>
         <div className="absolute bottom-1/4 left-20 w-8 h-8 rounded-full bg-players-team1 shadow-lg opacity-70 hidden md:block"></div>
         <div className="absolute bottom-1/3 right-10 w-8 h-8 rounded-full bg-players-team2 shadow-lg opacity-70 hidden md:block"></div>
+        
+        {/* Additional player pieces */}
+        <div className="absolute top-2/5 left-1/3 w-8 h-8 rounded-full bg-players-team1 shadow-lg opacity-70 hidden md:block"></div>
+        <div className="absolute bottom-2/5 right-1/4 w-8 h-8 rounded-full bg-players-team2 shadow-lg opacity-70 hidden md:block"></div>
         
         {/* Center circle (field marking) */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border-2 border-white/20 pointer-events-none hidden lg:block"></div>
@@ -73,11 +77,11 @@ const Index = () => {
             <div className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition duration-300 relative overflow-hidden">
               <div className="absolute -right-8 -bottom-8 w-24 h-24 rounded-full border-4 border-primary/10 opacity-20"></div>
               <div className="mb-4 p-3 bg-primary/10 rounded-full w-fit">
-                <Video className="text-primary" size={24} />
+                <ShieldCheck className="text-primary" size={24} />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Video Integration</h3>
+              <h3 className="text-xl font-semibold mb-2">Analyze Football Games</h3>
               <p className="text-muted-foreground">
-                Upload training videos and sync them with your tactics for comprehensive coaching sessions
+                Break down game footage, identify patterns, and develop winning strategies with our advanced analysis tools
               </p>
             </div>
           </div>
@@ -95,10 +99,26 @@ const Index = () => {
               </div>
               <div className="absolute top-1/2 left-0 right-0 h-px bg-white/30"></div>
               
-              {/* Example players */}
+              {/* Example players - more of them with arrows */}
               <div className="absolute top-1/4 left-1/4 w-8 h-8 rounded-full bg-players-team1 flex items-center justify-center text-white font-bold shadow-md">9</div>
               <div className="absolute top-3/4 right-1/4 w-8 h-8 rounded-full bg-players-team2 flex items-center justify-center text-white font-bold shadow-md">10</div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-players-neutral flex items-center justify-center text-white font-bold shadow-md">R</div>
+              
+              {/* Additional players */}
+              <div className="absolute top-1/3 left-1/3 w-8 h-8 rounded-full bg-players-team1 flex items-center justify-center text-white font-bold shadow-md">7</div>
+              <div className="absolute bottom-1/3 right-1/3 w-8 h-8 rounded-full bg-players-team2 flex items-center justify-center text-white font-bold shadow-md">5</div>
+              <div className="absolute top-2/3 left-2/3 w-8 h-8 rounded-full bg-players-team1 flex items-center justify-center text-white font-bold shadow-md">11</div>
+              
+              {/* Movement arrows */}
+              <div className="absolute top-[25%] left-[30%] text-white">
+                <ArrowRight className="w-10 h-10 text-white/70" />
+              </div>
+              <div className="absolute top-[60%] right-[40%] text-white">
+                <ArrowUpRight className="w-10 h-10 text-white/70" />
+              </div>
+              <div className="absolute bottom-[40%] left-[45%] text-white">
+                <ArrowDown className="w-10 h-10 text-white/70" />
+              </div>
             </div>
           </div>
         </div>
