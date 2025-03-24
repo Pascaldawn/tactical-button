@@ -11,7 +11,8 @@ import {
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// Firebase configuration - Replace with your own Firebase project configuration
+// Firebase configuration
+// Note: In a production environment, these values should be in environment variables
 const firebaseConfig = {
   apiKey: "AIzaSyBj_O57vXyy0n6XeKBw78Lki3fiBt84Z4Y",
   authDomain: "football-tactics-app-7b68a.firebaseapp.com",
@@ -22,9 +23,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+let app;
+let auth;
+let db;
+
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  console.log("Firebase initialized successfully");
+} catch (error) {
+  console.error("Error initializing Firebase:", error);
+}
 
 type User = {
   id: string;
@@ -49,9 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!auth) {
+      console.error("Auth is not initialized");
+      setIsLoading(false);
+      return () => {};
+    }
+
+    console.log("Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
+          console.log("User is authenticated:", firebaseUser.uid);
           // Get additional user data from Firestore
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           
@@ -76,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error("Error fetching user data:", error);
         }
       } else {
+        console.log("No user authenticated");
         setUser(null);
       }
       setIsLoading(false);
@@ -87,9 +106,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     
+    if (!auth) {
+      throw new Error("Authentication not initialized");
+    }
+    
     try {
+      console.log("Attempting login with email:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+      
+      console.log("Login successful for user:", firebaseUser.uid);
       
       // Get additional user data from Firestore
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -115,13 +141,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string, role: 'coach' | 'player') => {
     setIsLoading(true);
     
+    if (!auth || !db) {
+      throw new Error("Firebase services not initialized");
+    }
+    
     try {
+      console.log("Attempting signup with email:", email);
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
+      console.log("User created successfully:", firebaseUser.uid);
+      
       // Update profile with display name
       await updateProfile(firebaseUser, { displayName: name });
+      
+      console.log("Profile updated with name:", name);
       
       // Store additional user data in Firestore
       await setDoc(doc(db, "users", firebaseUser.uid), {
@@ -130,6 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role,
         createdAt: new Date().toISOString()
       });
+      
+      console.log("User data stored in Firestore");
       
       setUser({
         id: firebaseUser.uid,
@@ -147,9 +184,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    if (!auth) {
+      console.error("Auth is not initialized");
+      return;
+    }
+    
     try {
       await signOut(auth);
       setUser(null);
+      console.log("User signed out successfully");
     } catch (error) {
       console.error('Logout error:', error);
     }
