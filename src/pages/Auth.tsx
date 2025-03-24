@@ -12,7 +12,7 @@ const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, signup, isAuthenticated } = useAuth();
+  const { login, signup, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   // Redirect to dashboard if already authenticated
@@ -31,6 +31,7 @@ const Auth: React.FC = () => {
       if (isLogin) {
         await login(email, password);
         toast.success('Login successful');
+        navigate('/dashboard');
       } else {
         if (name.trim().length < 2) {
           throw new Error('Name must be at least 2 characters');
@@ -40,8 +41,8 @@ const Auth: React.FC = () => {
         }
         await signup(name, email, password, 'coach');
         toast.success('Account created successfully');
+        navigate('/dashboard');
       }
-      navigate('/dashboard');
     } catch (error: any) {
       console.error('Auth error:', error);
       let errorMessage = 'Authentication failed';
@@ -65,6 +66,14 @@ const Auth: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 animate-fade-in">

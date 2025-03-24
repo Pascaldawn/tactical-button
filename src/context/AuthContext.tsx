@@ -10,6 +10,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 // Firebase configuration
 // Note: In a production environment, these values should be in environment variables
@@ -23,18 +24,10 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-let auth;
-let db;
-
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  console.log("Firebase initialized successfully");
-} catch (error) {
-  console.error("Error initializing Firebase:", error);
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+console.log("Firebase initialized successfully");
 
 type User = {
   id: string;
@@ -59,12 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!auth) {
-      console.error("Auth is not initialized");
-      setIsLoading(false);
-      return () => {};
-    }
-
     console.log("Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -92,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
+          toast.error("Error loading user data");
         }
       } else {
         console.log("No user authenticated");
@@ -105,10 +93,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    
-    if (!auth) {
-      throw new Error("Authentication not initialized");
-    }
     
     try {
       console.log("Attempting login with email:", email);
@@ -140,10 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (name: string, email: string, password: string, role: 'coach' | 'player') => {
     setIsLoading(true);
-    
-    if (!auth || !db) {
-      throw new Error("Firebase services not initialized");
-    }
     
     try {
       console.log("Attempting signup with email:", email);
@@ -184,17 +164,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    if (!auth) {
-      console.error("Auth is not initialized");
-      return;
-    }
-    
     try {
       await signOut(auth);
       setUser(null);
       console.log("User signed out successfully");
     } catch (error) {
       console.error('Logout error:', error);
+      toast.error('Failed to sign out');
     }
   };
 
