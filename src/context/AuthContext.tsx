@@ -11,14 +11,14 @@ import {
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// Firebase configuration - normally would be in environment variables
+// Firebase configuration - Replace with your own Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBtKoMqY_fHxFbxkR7uHGedwvTw4YZpgr0",
-  authDomain: "football-tactics-app.firebaseapp.com",
-  projectId: "football-tactics-app",
-  storageBucket: "football-tactics-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  apiKey: "AIzaSyBj_O57vXyy0n6XeKBw78Lki3fiBt84Z4Y",
+  authDomain: "football-tactics-app-7b68a.firebaseapp.com",
+  projectId: "football-tactics-app-7b68a",
+  storageBucket: "football-tactics-app-7b68a.appspot.com",
+  messagingSenderId: "444179524891",
+  appId: "1:444179524891:web:cd0dfe17c1bbbf4fa13bc1"
 };
 
 // Initialize Firebase
