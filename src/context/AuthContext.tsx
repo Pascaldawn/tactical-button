@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -15,7 +14,7 @@ import { toast } from 'sonner';
 // Firebase configuration
 // Note: In a production environment, these values should be in environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDBRs2KqimW1Aa1V7uGkxFIwTXZbYT0Yo0",
+  apiKey: "AIzaSyAk9ChvDRPXxADhM2PvvwFWW-G0kMJnDZY",
   authDomain: "football-tactics-board-a9ab3.firebaseapp.com",
   projectId: "football-tactics-board-a9ab3",
   storageBucket: "football-tactics-board-a9ab3.appspot.com",
