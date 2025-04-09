@@ -1,12 +1,27 @@
 
 import React, { useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 import TacticsList from '@/components/dashboard/TacticsList';
 import QuickActions from '@/components/dashboard/QuickActions';
-import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -35,18 +50,66 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4 max-w-7xl mx-auto">
-      <DashboardHeader 
-        title={`Welcome back, ${user?.name || 'Coach'}`}
-        description="Manage your tactics and strategies from your dashboard"
-      />
-      
-      <StatsOverview tacticsCount={recentTactics.length} />
-      
-      <TacticsList tactics={recentTactics} />
-      
-      <QuickActions />
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <DashboardSidebar />
+        
+        <main className="flex-1 p-6 pt-20 md:pt-6 md:pl-6 lg:px-8">
+          <DashboardHeader 
+            title={`Welcome back, ${user?.name || 'Coach'}`}
+            description="Manage your tactics and strategies from your dashboard"
+          />
+          
+          <StatsOverview tacticsCount={recentTactics.length} />
+          
+          <Tabs defaultValue="tactics" className="space-y-4 mb-8">
+            <TabsList>
+              <TabsTrigger value="tactics">My Tactics</TabsTrigger>
+              <TabsTrigger value="recent">Recent Games</TabsTrigger>
+              <TabsTrigger value="templates">Templates</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="tactics" className="space-y-4">
+              <TacticsList tactics={recentTactics} />
+            </TabsContent>
+            
+            <TabsContent value="recent">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Games</CardTitle>
+                  <CardDescription>
+                    Your team's most recent match analyses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    No recent games found. Record your first game analysis!
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="templates">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tactic Templates</CardTitle>
+                  <CardDescription>
+                    Quick-start templates for common formations
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to Pro to access template library
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          <QuickActions />
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
