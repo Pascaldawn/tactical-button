@@ -3,6 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,6 +33,7 @@ const Auth: React.FC = () => {
     
     try {
       if (isLogin) {
+        console.log("Attempting login with:", email);
         await login(email, password);
         toast.success('Login successful');
         navigate('/dashboard');
@@ -39,6 +44,7 @@ const Auth: React.FC = () => {
         if (password.length < 6) {
           throw new Error('Password must be at least 6 characters');
         }
+        console.log("Attempting signup with:", email);
         await signup(name, email, password, 'coach');
         toast.success('Account created successfully');
         navigate('/dashboard');
@@ -77,109 +83,106 @@ const Auth: React.FC = () => {
   
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 animate-fade-in">
-      <div className="glass-panel p-8 w-full max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          {isLogin ? 'Sign in to your account' : 'Create a new account'}
-        </h2>
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            {isLogin ? 'Sign in to your account' : 'Create a new account'}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {isLogin ? 'Enter your credentials below' : 'Fill in your details to get started'}
+          </CardDescription>
+        </CardHeader>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-300 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="John Doe"
-              />
+        <CardContent>
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-300 rounded-md">
+              {error}
             </div>
           )}
           
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="you@example.com"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="••••••••"
-            />
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Password must be at least 6 characters
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="John Doe"
+                />
+              </div>
             )}
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full btn-primary"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              isLogin ? 'Sign in' : 'Create account'
-            )}
-          </button>
-        </form>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+              {!isLogin && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Password must be at least 6 characters
+                </p>
+              )}
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                isLogin ? 'Sign in' : 'Create account'
+              )}
+            </Button>
+          </form>
+        </CardContent>
         
-        <div className="mt-6 text-center">
-          <button
+        <CardFooter className="flex flex-col space-y-4">
+          <Button
+            variant="link"
             onClick={() => {
               setIsLogin(!isLogin);
               setError('');
             }}
-            className="text-primary hover:underline text-sm"
+            className="w-full"
           >
             {isLogin
               ? "Don't have an account? Sign up"
               : 'Already have an account? Sign in'}
-          </button>
-        </div>
-        
-        <div className="mt-8 pt-6 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
+          </Button>
+          
+          <div className="text-xs text-muted-foreground text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy.
-          </p>
-        </div>
-      </div>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

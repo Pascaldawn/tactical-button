@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -41,7 +42,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string, role: 'coach' | 'player') => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
           console.error("Error fetching user data:", error);
           toast.error("Error loading user data");
+          setUser(null);
         }
       } else {
         console.log("No user authenticated");
@@ -90,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     
     try {
@@ -111,6 +113,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: firebaseUser.displayName || userData.name || '',
           role: userData.role || 'coach'
         });
+      } else {
+        // Create a user document if it doesn't exist
+        await setDoc(doc(db, "users", firebaseUser.uid), {
+          name: firebaseUser.displayName || '',
+          email: firebaseUser.email || '',
+          role: 'coach',
+          createdAt: new Date().toISOString()
+        });
+        
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || '',
+          role: 'coach'
+        });
       }
       
     } catch (error) {
@@ -121,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: 'coach' | 'player') => {
+  const signup = async (name: string, email: string, password: string, role: 'coach' | 'player'): Promise<void> => {
     setIsLoading(true);
     
     try {
@@ -162,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       await signOut(auth);
       setUser(null);
@@ -170,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to sign out');
+      throw error;
     }
   };
 
