@@ -1,26 +1,29 @@
-
+// AuthContext.tsx 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+import {
+  initializeApp,
+  getApps,
+  getApp,
+} from 'firebase/app';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  User as FirebaseUser,
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import { toast } from 'sonner';
 
-// Firebase configuration
-// Note: In a production environment, these values should be in environment variables
+// Firebase configuration - normally would be in environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyAk9ChvDRPXxADhM2PvvwFWW-G0kMJnDZY",
-  authDomain: "football-tactics-board-a9ab3.firebaseapp.com",
-  projectId: "football-tactics-board-a9ab3",
-  storageBucket: "football-tactics-board-a9ab3.appspot.com",
-  messagingSenderId: "1059380306752",
-  appId: "1:1059380306752:web:48dbef19ca9cd5c7e39c20"
+  apiKey: "AIzaSyBtKoMqY_fHxFbxkR7uHGedwvTw4YZpgr0",
+  authDomain: "football-tactics-app.firebaseapp.com",
+  projectId: "football-tactics-app",
+  storageBucket: "football-tactics-app.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890abcdef"
 };
 
 // Initialize Firebase
@@ -33,7 +36,7 @@ type User = {
   id: string;
   email: string;
   name: string;
-  role: 'coach' | 'player';
+  role: 'Analyst';
 } | null;
 
 interface AuthContextType {
@@ -42,7 +45,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string, role: 'coach' | 'player') => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          console.log("User is authenticated:", firebaseUser.uid);
           // Get additional user data from Firestore
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           
@@ -66,21 +68,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
               name: firebaseUser.displayName || userData.name || '',
-              role: userData.role || 'coach'
+              role: 'Analyst',
             });
           } else {
-            // Fallback if no user document exists
             setUser({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
               name: firebaseUser.displayName || '',
-              role: 'coach'
+              role: 'Analyst',
             });
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
-          toast.error("Error loading user data");
-          setUser(null);
         }
       } else {
         console.log("No user authenticated");
@@ -94,13 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
-    
     try {
       console.log("Attempting login with email:", email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
-      
-      console.log("Login successful for user:", firebaseUser.uid);
       
       // Get additional user data from Firestore
       const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -111,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           name: firebaseUser.displayName || userData.name || '',
-          role: userData.role || 'coach'
+          role: 'Analyst',
         });
       } else {
         // Create a user document if it doesn't exist
@@ -129,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: 'coach'
         });
       }
-      
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -138,39 +133,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: 'coach' | 'player'): Promise<void> => {
+  const signup = async (name: string, email: string, password: string, role: 'coach' | 'player') => {
     setIsLoading(true);
-    
     try {
-      console.log("Attempting signup with email:", email);
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
       
-      console.log("User created successfully:", firebaseUser.uid);
-      
       // Update profile with display name
       await updateProfile(firebaseUser, { displayName: name });
-      
-      console.log("Profile updated with name:", name);
       
       // Store additional user data in Firestore
       await setDoc(doc(db, "users", firebaseUser.uid), {
         name,
         email,
-        role,
-        createdAt: new Date().toISOString()
+        role: 'Analyst',
+        createdAt: new Date().toISOString(),
       });
-      
-      console.log("User data stored in Firestore");
       
       setUser({
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
         name,
-        role
+        role: 'Analyst',
       });
-      
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
@@ -191,15 +177,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const contextValue: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    signup,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
-      isLoading, 
-      login, 
-      signup, 
-      logout 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -212,3 +200,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
