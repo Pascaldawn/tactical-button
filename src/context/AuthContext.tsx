@@ -18,13 +18,15 @@ import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Firebase configuration - normally would be in environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBtKoMqY_fHxFbxkR7uHGedwvTw4YZpgr0",
-  authDomain: "football-tactics-app.firebaseapp.com",
-  projectId: "football-tactics-app",
-  storageBucket: "football-tactics-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  apiKey: "AIzaSyAQUHOdpdpdmsi8E7HNAmgj44_fZkN3rzc",
+  authDomain: "tactical-button-c8a62.firebaseapp.com",
+  projectId: "tactical-button-c8a62",
+  storageBucket: "tactical-button-c8a62.firebasestorage.app",
+  messagingSenderId: "667547202980",
+  appId: "1:667547202980:web:cec31c902838c550fe3d31",
+  measurementId: "G-3S9DBL21K2"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
