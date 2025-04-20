@@ -1,70 +1,61 @@
-// pages/record.js
-import { useState } from "react";
-import { ReactMediaRecorder } from "react-media-recorder";
-import TacticBoard from "../components/TacticBoard";
+"use client";
 
-export default function RecordAnalyzePage() {
-  const [recording, setRecording] = useState(false);
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+
+export default function Record() {
+  const router = useRouter();
+  const [isSubscribed, setIsSubscribed] = useState(null);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    // Replace this with your actual subscription checking logic
+    const checkSubscription = async () => {
+      // Example API call to check if the user is subscribed
+      const res = await fetch("/api/check-subscription");
+      const data = await res.json();
+      setIsSubscribed(data.isSubscribed);
+    };
+
+    checkSubscription();
+  }, []);
+
+  useEffect(() => {
+    if (isSubscribed === false) {
+      router.push("/subscribe");
+    }
+  }, [isSubscribed, router]);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      videoRef.current.srcObject = stream;
+    } catch (err) {
+      console.error("Error accessing camera: ", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isSubscribed) {
+      startCamera();
+    }
+  }, [isSubscribed]);
+
+  if (isSubscribed === null) {
+    return <div>Loading...</div>; // Loading state
+  }
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-2xl font-semibold">Record & Analyze</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <h1 className="text-3xl font-bold mb-8">Record Your Analysis</h1>
+      <video ref={videoRef} autoPlay muted className="w-full max-w-4xl rounded shadow-md" />
 
-      <ReactMediaRecorder
-        video
-        audio
-        render={({ status, startRecording, stopRecording, mediaBlobUrl }) => (
-          <>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  startRecording();
-                  setRecording(true);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded"
-                disabled={recording}
-              >
-                Start Recording
-              </button>
-              <button
-                onClick={() => {
-                  stopRecording();
-                  setRecording(false);
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-                disabled={!recording}
-              >
-                Stop Recording
-              </button>
-            </div>
-
-            <div className="mt-4">
-              {mediaBlobUrl && (
-                <div>
-                  <video src={mediaBlobUrl} controls className="w-full mb-2" />
-                  {/* 🔒 Lock download unless subscribed */}
-                  {true /* Replace with actual subscription check */ ? (
-                    <button
-                      className="bg-blue-500 text-white px-3 py-2 rounded"
-                      onClick={() => window.open(mediaBlobUrl)}
-                    >
-                      Download Video
-                    </button>
-                  ) : (
-                    <p className="text-red-600">
-                      Subscribe to download this video.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <TacticBoard />
-            </div>
-          </>
-        )}
-      />
+      <button
+        onClick={() => router.push("/analyze-with-recording")}
+        className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+      >
+        Start Recording Analysis
+      </button>
     </div>
   );
 }
