@@ -1,58 +1,11 @@
 
-// AuthContext.tsx 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  initializeApp,
-  getApps,
-  getApp,
-} from 'firebase/app';
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
-
-// Firebase configuration - normally would be in environment variables
-const firebaseConfig = {
-  apiKey: "AIzaSyAQUHOdpdpdmsi8E7HNAmgj44_fZkN3rzc",
-  authDomain: "tactical-button-c8a62.firebaseapp.com",
-  projectId: "tactical-button-c8a62",
-  storageBucket: "tactical-button-c8a62.firebasestorage.app",
-  messagingSenderId: "667547202980",
-  appId: "1:667547202980:web:cec31c902838c550fe3d31",
-  measurementId: "G-3S9DBL21K2"
-};
-
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-console.log("Firebase initialized successfully");
-
-type UserRole = 'Analyst' | 'coach' | 'player';
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-} | null;
-
-interface AuthContextType {
-  user: User;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
-  logout: () => void;
-}
+import { auth, db } from '../config/firebase';
+import { loginUser, signupUser, logoutUser } from '../services/auth';
+import type { User, AuthContextType, UserRole } from '../types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -65,7 +18,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Get additional user data from Firestore
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           
           if (userDoc.exists()) {
@@ -97,40 +49,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       console.log("Attempting login with email:", email);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      const { firebaseUser, userData } = await loginUser(email, password);
       
-      // Get additional user data from Firestore
-      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          name: firebaseUser.displayName || userData.name || '',
-          role: userData.role as UserRole || 'Analyst',
-        });
-      } else {
-        // Create a user document if it doesn't exist
-        await setDoc(doc(db, "users", firebaseUser.uid), {
-          name: firebaseUser.displayName || '',
-          email: firebaseUser.email || '',
-          role: 'Analyst',
-          createdAt: new Date().toISOString()
-        });
-        
-        setUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          name: firebaseUser.displayName || '',
-          role: 'Analyst'
-        });
-      }
+      setUser({
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || (userData?.name as string) || '',
+        role: (userData?.role as UserRole) || 'Analyst',
+      });
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -142,20 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string, role: UserRole = 'Analyst') => {
     setIsLoading(true);
     try {
-      // Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      
-      // Update profile with display name
-      await updateProfile(firebaseUser, { displayName: name });
-      
-      // Store additional user data in Firestore
-      await setDoc(doc(db, "users", firebaseUser.uid), {
-        name,
-        email,
-        role,
-        createdAt: new Date().toISOString(),
-      });
+      const firebaseUser = await signupUser(name, email, password, role);
       
       setUser({
         id: firebaseUser.uid,
@@ -171,9 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
     try {
-      await signOut(auth);
+      await logoutUser();
       setUser(null);
       console.log("User signed out successfully");
     } catch (error) {
