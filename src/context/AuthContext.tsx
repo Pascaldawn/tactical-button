@@ -15,6 +15,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 // Firebase configuration - normally would be in environment variables
 const firebaseConfig = {
@@ -149,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await setDoc(doc(db, "users", firebaseUser.uid), {
         name,
         email,
-        role: 'Analyst',
+        role: 'Analyst', // Changed from 'coach' to 'Analyst' to match the type
         createdAt: new Date().toISOString(),
       });
       
@@ -202,4 +203,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
