@@ -1,3 +1,4 @@
+
 // AuthContext.tsx 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
@@ -35,11 +36,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 console.log("Firebase initialized successfully");
 
+type UserRole = 'Analyst' | 'coach' | 'player';
+
 type User = {
   id: string;
   email: string;
   name: string;
-  role: 'Analyst';
+  role: UserRole;
 } | null;
 
 interface AuthContextType {
@@ -47,7 +50,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, role: 'coach' | 'player') => Promise<void>;
+  signup: (name: string, email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
 }
 
@@ -71,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
               name: firebaseUser.displayName || userData.name || '',
-              role: 'Analyst',
+              role: userData.role as UserRole || 'Analyst',
             });
           } else {
             setUser({
@@ -110,14 +113,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           name: firebaseUser.displayName || userData.name || '',
-          role: 'Analyst',
+          role: userData.role as UserRole || 'Analyst',
         });
       } else {
         // Create a user document if it doesn't exist
         await setDoc(doc(db, "users", firebaseUser.uid), {
           name: firebaseUser.displayName || '',
           email: firebaseUser.email || '',
-          role: 'coach',
+          role: 'Analyst',
           createdAt: new Date().toISOString()
         });
         
@@ -125,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           name: firebaseUser.displayName || '',
-          role: 'coach'
+          role: 'Analyst'
         });
       }
     } catch (error) {
@@ -136,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signup = async (name: string, email: string, password: string, role: 'coach' | 'player') => {
+  const signup = async (name: string, email: string, password: string, role: UserRole = 'Analyst') => {
     setIsLoading(true);
     try {
       // Create user in Firebase Auth
@@ -150,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await setDoc(doc(db, "users", firebaseUser.uid), {
         name,
         email,
-        role: 'Analyst', // Changed from 'coach' to 'Analyst' to match the type
+        role,
         createdAt: new Date().toISOString(),
       });
       
@@ -158,7 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
         name,
-        role: 'Analyst',
+        role,
       });
     } catch (error) {
       console.error('Signup error:', error);

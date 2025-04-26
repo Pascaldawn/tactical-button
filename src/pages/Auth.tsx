@@ -45,7 +45,7 @@ const Auth: React.FC = () => {
           throw new Error('Password must be at least 6 characters');
         }
         console.log("Attempting signup with:", email);
-        await signup(name, email, password, 'coach');
+        await signup(name, email, password, 'Analyst');
         toast.success('Account created successfully');
         navigate('/dashboard');
       }
