@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface PlayerIconProps {
@@ -19,6 +19,13 @@ const TeamColors = {
 const PlayerIcon: React.FC<PlayerIconProps> = ({ id, number, team, position, onPositionChange }) => {
   const [isDragging, setIsDragging] = useState(false);
   const constraintsRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after component is mounted to ensure DOM is ready
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const handleDragStart = () => {
     setIsDragging(true);
@@ -29,6 +36,11 @@ const PlayerIcon: React.FC<PlayerIconProps> = ({ id, number, team, position, onP
     onPositionChange(id, { x: info.point.x, y: info.point.y });
   };
 
+  // Only render motion.div when component is mounted
+  if (!mounted) {
+    return null; // Return null during SSR or before component is mounted
+  }
+
   return (
     <motion.div
       className={`player-icon ${TeamColors[team]} ${isDragging ? 'player-dragging' : ''}`}
@@ -37,7 +49,7 @@ const PlayerIcon: React.FC<PlayerIconProps> = ({ id, number, team, position, onP
       transition={{ type: 'spring', damping: 20 }}
       drag
       dragMomentum={false}
-      dragConstraints={constraintsRef}
+      dragElastic={0} // Disable elasticity for more precise positioning
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       whileTap={{ scale: 1.1 }}

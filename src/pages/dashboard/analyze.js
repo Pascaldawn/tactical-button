@@ -1,9 +1,31 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 const AnalyzePage = () => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      setIsLoading(true);
+      try {
+        if (!isAuthenticated) {
+          navigate("/auth");
+          toast.error("Please sign in to access this page");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [isAuthenticated, navigate]);
 
   // Dummy subscription check (replace later with real API call)
   const isSubscribed = false; // Change manually for now for testing
@@ -15,6 +37,14 @@ const AnalyzePage = () => {
       navigate("/subscribe"); // Redirect to subscribe page
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
@@ -49,4 +79,3 @@ const AnalyzePage = () => {
 };
 
 export default AnalyzePage;
-

@@ -31,6 +31,13 @@ const Field: React.FC<FieldProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState<{ x: number; y: number } | null>(null);
   const [fieldSize, setFieldSize] = useState({ width: 0, height: 0 });
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state on component mount
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
 
   // Handle window resize
   useEffect(() => {
@@ -196,8 +203,8 @@ const Field: React.FC<FieldProps> = ({
         onTouchEnd={endDrawing}
       />
       
-      {/* Players */}
-      {players.map((player) => (
+      {/* Only render players when component is mounted */}
+      {isMounted && players.map((player) => (
         <PlayerIcon
           key={player.id}
           id={player.id}
