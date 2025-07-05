@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      allowedHosts: ['staging.tacticalbutton.com'],
     },
     plugins: [
       react(),
