@@ -20,11 +20,4 @@ jobs:
           npm run build
           pm2 restart staging-frontend
 
-      - name: Deploy Backend
-        run: |
-          echo "Deploying Backend..."
-          cd /var/www/frontend-staging/backend
-          npm install
-          pm2 restart staging-backend
-
-
+    
