@@ -1,0 +1,331 @@
+"use client"
+
+import React from "react"
+
+import { useState, useRef } from "react"
+import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
+
+interface Player {
+    id: string
+    x: number
+    y: number
+    team: "home" | "away"
+    number: number
+}
+
+export const TacticsBoard = React.memo(function TacticsBoard() {
+    const svgRef = useRef<SVGSVGElement>(null)
+    const [draggedPlayer, setDraggedPlayer] = useState<string | null>(null)
+    // Drawing state
+    const [isDrawing, setIsDrawing] = useState(false)
+    const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([])
+    const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null)
+    const {
+        players,
+        updatePlayerPosition,
+        homeTeam,
+        awayTeam,
+        drawingMode,
+        drawings,
+        addDrawing,
+        removeDrawing,
+        isHomeTeamActive // <-- add this
+    } = useTacticsBoardWithContext()
+
+    const getSvgCoordinates = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (!svgRef.current) return { x: 0, y: 0 }
+        const rect = svgRef.current.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+        return { x, y }
+    }
+
+    const distanceToLineSegment = (point: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+        const A = point.x - p1.x
+        const B = point.y - p1.y
+        const C = p2.x - p1.x
+        const D = p2.y - p1.y
+
+        const dot = A * C + B * D
+        const lenSq = C * C + D * D
+        let param = -1
+
+        if (lenSq !== 0) param = dot / lenSq
+
+        let xx, yy
+
+        if (param < 0) {
+            xx = p1.x
+            yy = p1.y
+        } else if (param > 1) {
+            xx = p2.x
+            yy = p2.y
+        } else {
+            xx = p1.x + param * C
+            yy = p1.y + param * D
+        }
+
+        const dx = point.x - xx
+        const dy = point.y - yy
+
+        return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (drawingMode === "move") {
+            // Handle player dragging (existing logic)
+            const target = e.target as SVGElement
+            const playerGroup = target.closest('g[data-player-id]')
+            if (playerGroup) {
+                const playerId = playerGroup.getAttribute('data-player-id')
+                if (playerId) {
+                    setDraggedPlayer(playerId)
+                }
+            }
+        } else if (drawingMode === "draw") {
+            // Start drawing
+            const coords = getSvgCoordinates(e)
+            setIsDrawing(true)
+            setDrawingPoints([coords])
+            setDrawingStart(coords)
+        } else if (drawingMode === "erase") {
+            // Handle erasing
+            const coords = getSvgCoordinates(e)
+            const clickedDrawing = drawings.find(drawing => {
+                if (drawing.type === "arrow" && drawing.points.length >= 2) {
+                    // Check if click is near the arrow line
+                    for (let i = 0; i < drawing.points.length - 1; i++) {
+                        const p1 = drawing.points[i]
+                        const p2 = drawing.points[i + 1]
+                        const distance = distanceToLineSegment(coords, p1, p2)
+                        if (distance < 3) { // 3% tolerance
+                            return true
+                        }
+                    }
+                }
+                return false
+            })
+
+            if (clickedDrawing) {
+                removeDrawing(clickedDrawing.id)
+            }
+        }
+    }
+
+    const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (drawingMode === "move" && draggedPlayer) {
+            const coords = getSvgCoordinates(e)
+            // Keep players within bounds
+            const boundedX = Math.max(2, Math.min(98, coords.x))
+            const boundedY = Math.max(2, Math.min(98, coords.y))
+            updatePlayerPosition(draggedPlayer, boundedX, boundedY)
+        } else if (drawingMode === "draw" && isDrawing) {
+            const coords = getSvgCoordinates(e)
+            setDrawingPoints(prev => [...prev, coords])
+        }
+    }
+
+    const handleMouseUp = (e: React.MouseEvent<SVGSVGElement>) => {
+        if (drawingMode === "move") {
+            setDraggedPlayer(null)
+        } else if (drawingMode === "draw" && isDrawing) {
+            const coords = getSvgCoordinates(e)
+            const finalPoints = [...drawingPoints, coords]
+
+            if (finalPoints.length >= 2) {
+                addDrawing({
+                    type: "arrow",
+                    points: finalPoints,
+                    color: "#ff6b6b",
+                    strokeWidth: 0.3,
+                })
+            }
+
+            setIsDrawing(false)
+            setDrawingPoints([])
+            setDrawingStart(null)
+        }
+    }
+
+    const handleMouseLeave = () => {
+        setDraggedPlayer(null)
+        if (isDrawing) {
+            setIsDrawing(false)
+            setDrawingPoints([])
+        }
+    }
+
+    // Erase handler for arrows
+    const handleEraseArrow = (drawingId: string) => {
+        if (drawingMode === "erase") {
+            removeDrawing(drawingId)
+        }
+    }
+
+    const renderArrow = (drawing: any, idx: number) => {
+        const points = drawing.points
+        if (points.length < 2) return null
+        const pathData = points.map((point: any, index: number) =>
+            `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+        ).join(' ')
+        // Calculate arrow head
+        const endPoint = points[points.length - 1]
+        const prevPoint = points[points.length - 2]
+        const angle = Math.atan2(endPoint.y - prevPoint.y, endPoint.x - prevPoint.x)
+        const arrowLength = 3
+        const arrowAngle = Math.PI / 6
+        const arrowHead1 = {
+            x: endPoint.x - arrowLength * Math.cos(angle - arrowAngle),
+            y: endPoint.y - arrowLength * Math.sin(angle - arrowAngle)
+        }
+        const arrowHead2 = {
+            x: endPoint.x - arrowLength * Math.cos(angle + arrowAngle),
+            y: endPoint.y - arrowLength * Math.sin(angle + arrowAngle)
+        }
+        return (
+            <g
+                key={drawing.id || idx}
+                style={drawingMode === "erase" ? { cursor: "pointer" } : {}}
+                onClick={() => handleEraseArrow(drawing.id)}
+            >
+                <path
+                    d={pathData}
+                    stroke={drawing.color}
+                    strokeWidth={drawing.strokeWidth}
+                    fill="none"
+                    markerEnd="url(#arrowhead)"
+                />
+                <path
+                    d={`M ${endPoint.x} ${endPoint.y} L ${arrowHead1.x} ${arrowHead1.y} M ${endPoint.x} ${endPoint.y} L ${arrowHead2.x} ${arrowHead2.y}`}
+                    stroke={drawing.color}
+                    strokeWidth={drawing.strokeWidth}
+                    fill="none"
+                />
+            </g>
+        )
+    }
+
+    // Filter players to only show the active team
+    const activeTeam = isHomeTeamActive ? "home" : "away"
+    const visiblePlayers = players.filter((player) => player.team === activeTeam)
+
+    return (
+        <div className="w-full min-w-0 min-h-[180px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] xl:min-h-[520px] h-full flex items-center justify-center rounded-lg overflow-hidden relative" data-tactics-board>
+            {drawingMode !== "move" && (
+                <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs z-10">
+                    {drawingMode === "draw" ? "Drawing Mode - Click and drag to draw arrows" : "Erase Mode - Click on arrows to remove"}
+                </div>
+            )}
+            <svg
+                ref={svgRef}
+                viewBox="0 0 105 68"
+                className={`w-full h-auto aspect-[105/68] max-h-full ${drawingMode === "draw" ? "cursor-crosshair" :
+                    drawingMode === "erase" ? "cursor-pointer" :
+                        "cursor-default"
+                    }`}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseLeave}
+            >
+                {/* Arrow marker definition */}
+                <defs>
+                    <marker
+                        id="arrowhead"
+                        markerWidth="10"
+                        markerHeight="7"
+                        refX="9"
+                        refY="3.5"
+                        orient="auto"
+                    >
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#ff6b6b" />
+                    </marker>
+                </defs>
+
+                {/* Pitch Background */}
+                <rect x="0" y="0" width="105" height="68" fill="#22a745" />
+
+                {/* Pitch Lines - all inside the pitch, sharp corners, correct proportions */}
+                <g stroke="white" strokeWidth="0.8" fill="none">
+                    {/* Outer boundary */}
+                    <rect x="0.5" y="0.5" width="104" height="67" />
+
+                    {/* Center line */}
+                    <line x1="52.5" y1="0.5" x2="52.5" y2="67.5" />
+
+                    {/* Center circle */}
+                    <circle cx="52.5" cy="34" r="9.15" />
+                    {/* Center spot */}
+                    <circle cx="52.5" cy="34" r="0.3" fill="white" />
+
+                    {/* Penalty areas */}
+                    {/* Left */}
+                    <rect x="0.5" y="13.84" width="16.5" height="40.32" />
+                    {/* Right */}
+                    <rect x="88" y="13.84" width="16.5" height="40.32" />
+
+                    {/* 6-yard boxes */}
+                    {/* Left */}
+                    <rect x="0.5" y="25.34" width="5.5" height="17.32" />
+                    {/* Right */}
+                    <rect x="99" y="25.34" width="5.5" height="17.32" />
+
+                    {/* Penalty spots */}
+                    {/* Left */}
+                    <circle cx="11" cy="34" r="0.3" fill="white" />
+                    {/* Right */}
+                    <circle cx="94" cy="34" r="0.3" fill="white" />
+
+                    {/* Penalty arcs */}
+                    {/* Left: arc outside the box, tangent to the penalty area line, like |) */}
+                    <path d="M 16.5 24.85 A 9.15 9.15 0 0 1 16.5 43.15" />
+                    {/* Right: arc outside the box, tangent to the penalty area line, like (| */}
+                    <path d="M 88 24.85 A 9.15 9.15 0 0 0 88 43.15" />
+                </g>
+
+                {/* Goals (outside the pitch) */}
+                <g stroke="#bbb" strokeWidth="0.8" fill="none">
+                    {/* Left goal */}
+                    <rect x="-2" y="30.5" width="2.5" height="7" />
+                    {/* Right goal */}
+                    <rect x="104.5" y="30.5" width="2.5" height="7" />
+                </g>
+
+                {/* Rendered drawings */}
+                {drawings.map((drawing, idx) => renderArrow(drawing, idx))}
+
+                {/* Current drawing preview */}
+                {isDrawing && drawingPoints.length >= 2 && (
+                    renderArrow({ points: drawingPoints, color: "#ff6b6b", strokeWidth: 0.3 }, -1)
+                )}
+
+                {/* Players: show both home and away */}
+                {players.map((player, idx) => (
+                    <g
+                        key={player.id + '-' + idx}
+                        data-player-id={player.id}
+                        transform={`translate(${player.x}, ${player.y})`}
+                        className={drawingMode === "move" ? "cursor-move" : "cursor-default"}
+                    >
+                        <circle
+                            r="1.4"
+                            fill={player.team === "home" ? homeTeam.color : awayTeam.color}
+                            stroke="white"
+                            strokeWidth="0.2"
+                            className="hover:r-2.5 transition-all"
+                        />
+                        <text
+                            textAnchor="middle"
+                            dy="0.5"
+                            fontSize="1.1"
+                            fill="white"
+                            className="pointer-events-none select-none font-bold"
+                        >
+                            {player.number}
+                        </text>
+                    </g>
+                ))}
+            </svg>
+        </div>
+    )
+})
