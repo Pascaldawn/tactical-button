@@ -61,9 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             else {
                 throw new Error("Registration failed")
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Registration error:", error)
-            throw new Error(error.response?.data?.message || "Registration failed")
+            throw new Error((error as any)?.response?.data?.message || "Registration failed")
         }
     }
 
@@ -82,9 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 throw new Error("Registration failed")
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Registration error:", error)
-            throw new Error(error.response?.data?.message || "Registration failed")
+            throw new Error((error as any)?.response?.data?.message || "Registration failed")
         }
     }
 

@@ -5,21 +5,12 @@ import React from "react"
 import { useState, useRef } from "react"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 
-interface Player {
-    id: string
-    x: number
-    y: number
-    team: "home" | "away"
-    number: number
-}
-
 export const TacticsBoard = React.memo(function TacticsBoard() {
     const svgRef = useRef<SVGSVGElement>(null)
     const [draggedPlayer, setDraggedPlayer] = useState<string | null>(null)
     // Drawing state
     const [isDrawing, setIsDrawing] = useState(false)
     const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([])
-    const [drawingStart, setDrawingStart] = useState<{ x: number; y: number } | null>(null)
     const {
         players,
         updatePlayerPosition,
@@ -87,7 +78,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             const coords = getSvgCoordinates(e)
             setIsDrawing(true)
             setDrawingPoints([coords])
-            setDrawingStart(coords)
         } else if (drawingMode === "erase") {
             // Handle erasing
             const coords = getSvgCoordinates(e)
@@ -143,7 +133,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
             setIsDrawing(false)
             setDrawingPoints([])
-            setDrawingStart(null)
         }
     }
 
@@ -162,10 +151,10 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         }
     }
 
-    const renderArrow = (drawing: any, idx: number) => {
+    const renderArrow = (drawing: { id?: string; type: string; points: { x: number; y: number }[]; color: string; strokeWidth: number }, idx: number) => {
         const points = drawing.points
         if (points.length < 2) return null
-        const pathData = points.map((point: any, index: number) =>
+        const pathData = points.map((point: { x: number; y: number }, index: number) =>
             `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
         ).join(' ')
         // Calculate arrow head
@@ -186,7 +175,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             <g
                 key={drawing.id || idx}
                 style={drawingMode === "erase" ? { cursor: "pointer" } : {}}
-                onClick={() => handleEraseArrow(drawing.id)}
+                onClick={() => handleEraseArrow(drawing.id || '')}
             >
                 <path
                     d={pathData}
@@ -207,7 +196,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
     // Filter players to only show the active team
     const activeTeam = isHomeTeamActive ? "home" : "away"
-    const visiblePlayers = players.filter((player) => player.team === activeTeam)
 
     return (
         <div className="w-full min-w-0 min-h-[180px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] xl:min-h-[520px] h-full flex items-center justify-center rounded-lg overflow-hidden relative" data-tactics-board>
@@ -296,7 +284,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
                 {/* Current drawing preview */}
                 {isDrawing && drawingPoints.length >= 2 && (
-                    renderArrow({ points: drawingPoints, color: "#ff6b6b", strokeWidth: 0.3 }, -1)
+                    renderArrow({ type: "arrow", points: drawingPoints, color: "#ff6b6b", strokeWidth: 0.3 }, -1)
                 )}
 
                 {/* Players: show both home and away */}

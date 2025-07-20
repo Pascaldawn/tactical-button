@@ -18,9 +18,9 @@ import { useRouter } from "next/navigation"
 import html2canvas from "html2canvas"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 // Debounce utility
-function debounce(fn: (...args: any[]) => void, delay: number) {
-    let timer: any;
-    return (...args: any[]) => {
+function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
+    let timer: ReturnType<typeof setTimeout>;
+    return (...args: Parameters<T>) => {
         clearTimeout(timer);
         timer = setTimeout(() => fn(...args), delay);
     };

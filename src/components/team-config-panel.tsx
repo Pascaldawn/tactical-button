@@ -3,7 +3,6 @@
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 import { useState } from "react"
 import { FormationSelector } from "@/components/formation-selector"

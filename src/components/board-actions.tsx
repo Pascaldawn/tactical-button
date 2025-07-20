@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Save } from "lucide-react"
-import html2canvas from "html2canvas"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function BoardActions() {
@@ -22,6 +21,9 @@ export function BoardActions() {
             canvas.width = 1280;
             canvas.height = 853;
             const ctx = canvas.getContext("2d");
+            if (!ctx) {
+                throw new Error("Could not get 2D context");
+            }
             ctx.fillStyle = "#22c55e";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);

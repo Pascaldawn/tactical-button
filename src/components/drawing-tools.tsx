@@ -22,7 +22,7 @@ export function DrawingTools() {
                         key={tool.id}
                         variant={drawingMode === tool.id ? "default" : "outline"}
                         size="sm"
-                        onClick={() => changeDrawingMode(tool.id as any)}
+                        onClick={() => changeDrawingMode(tool.id as 'move' | 'draw' | 'erase')}
                         className="flex flex-col items-center space-y-1 h-auto py-2"
                         title={tool.description}
                     >

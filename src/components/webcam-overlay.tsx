@@ -14,10 +14,35 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
     const [isWebcamOn, setIsWebcamOn] = useState(true) // default ON
     const [hasPermission, setHasPermission] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [trackState, setTrackState] = useState<string>("")
     // Remove device selection logic
     const videoRef = useRef<HTMLVideoElement>(null)
     const streamRef = useRef<MediaStream | null>(null)
+
+    // Move startWebcam above useEffect
+    const startWebcam = async () => {
+        setError(null)
+        try {
+            if (streamRef.current) {
+                stopWebcam()
+            }
+            console.log('Requesting default/internal webcam...')
+            const constraints: MediaStreamConstraints = {
+                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+                audio: false,
+            }
+            const stream = await navigator.mediaDevices.getUserMedia(constraints)
+            console.log('Webcam stream obtained:', stream)
+            streamRef.current = stream
+            setHasPermission(true)
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setHasPermission(false)
+                setIsWebcamOn(false)
+                setError(err.message || 'Could not access webcam')
+                console.error('Error accessing webcam:', err)
+            }
+        }
+    }
 
     // No device selection effect
     useEffect(() => {
@@ -44,37 +69,13 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
             videoRef.current.play().catch(console.error)
             const videoTrack = streamRef.current.getVideoTracks()[0]
             if (videoTrack) {
-                setTrackState(`enabled=${videoTrack.enabled}, readyState=${videoTrack.readyState}`)
                 console.log('Video track state:', videoTrack)
             } else {
-                setTrackState('No video track')
+                console.log('No video track')
             }
             console.log('Webcam stream attached to video element (effect)')
         }
-    }, [hasPermission, isWebcamOn])
-
-    const startWebcam = async () => {
-        setError(null)
-        try {
-            if (streamRef.current) {
-                stopWebcam()
-            }
-            console.log('Requesting default/internal webcam...')
-            const constraints: MediaStreamConstraints = {
-                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-                audio: false,
-            }
-            const stream = await navigator.mediaDevices.getUserMedia(constraints)
-            console.log('Webcam stream obtained:', stream)
-            streamRef.current = stream
-            setHasPermission(true)
-        } catch (err: any) {
-            setHasPermission(false)
-            setIsWebcamOn(false)
-            setError(err?.message || 'Could not access webcam')
-            console.error('Error accessing webcam:', err)
-        }
-    }
+    }, [hasPermission, isWebcamOn, startWebcam])
 
     const stopWebcam = () => {
         if (streamRef.current) {
