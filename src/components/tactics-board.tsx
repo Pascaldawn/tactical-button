@@ -26,8 +26,8 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
     const getSvgCoordinates = (e: React.MouseEvent<SVGSVGElement>) => {
         if (!svgRef.current) return { x: 0, y: 0 }
         const rect = svgRef.current.getBoundingClientRect()
-        const x = ((e.clientX - rect.left) / rect.width) * 100
-        const y = ((e.clientY - rect.top) / rect.height) * 100
+        const x = ((e.clientX - rect.left) / rect.width) * 105
+        const y = ((e.clientY - rect.top) / rect.height) * 68
         return { x, y }
     }
 
@@ -86,8 +86,8 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             // Start drawing
             const coords = getSvgCoordinates(e)
             setIsDrawing(true)
-            setDrawingPoints([coords])
             drawingPointsRef.current = [coords]
+            setDrawingPoints([coords])
         } else if (drawingMode === "erase") {
             // Handle erasing
             const coords = getSvgCoordinates(e)
@@ -144,7 +144,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
-                    color: "#ff6b6b",
                     strokeWidth: 0.3,
                 })
             }
@@ -163,48 +162,28 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         }
     }
 
-    // Erase handler for arrows
-    const handleEraseArrow = (drawingId: string) => {
+    // Erase handler for drawings
+    const handleEraseDrawing = (drawingId: string) => {
         if (drawingMode === "erase") {
             removeDrawing(drawingId)
         }
     }
 
-    const renderArrow = (drawing: { id?: string; type: string; points: { x: number; y: number }[]; color: string; strokeWidth: number }, idx: number) => {
+    const renderLine = (drawing: { id?: string; type: string; points: { x: number; y: number }[]; color: string; strokeWidth: number }, idx: number) => {
         const points = drawing.points
         if (points.length < 2) return null
         const pathData = points.map((point: { x: number; y: number }, index: number) =>
             `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
         ).join(' ')
-        // Calculate arrow head
-        const endPoint = points[points.length - 1]
-        const prevPoint = points[points.length - 2]
-        const angle = Math.atan2(endPoint.y - prevPoint.y, endPoint.x - prevPoint.x)
-        const arrowLength = 3
-        const arrowAngle = Math.PI / 6
-        const arrowHead1 = {
-            x: endPoint.x - arrowLength * Math.cos(angle - arrowAngle),
-            y: endPoint.y - arrowLength * Math.sin(angle - arrowAngle)
-        }
-        const arrowHead2 = {
-            x: endPoint.x - arrowLength * Math.cos(angle + arrowAngle),
-            y: endPoint.y - arrowLength * Math.sin(angle + arrowAngle)
-        }
+
         return (
             <g
                 key={drawing.id || idx}
                 style={drawingMode === "erase" ? { cursor: "pointer" } : {}}
-                onClick={() => handleEraseArrow(drawing.id || '')}
+                onClick={() => handleEraseDrawing(drawing.id || '')}
             >
                 <path
                     d={pathData}
-                    stroke={drawing.color}
-                    strokeWidth={drawing.strokeWidth}
-                    fill="none"
-                    markerEnd="url(#arrowhead)"
-                />
-                <path
-                    d={`M ${endPoint.x} ${endPoint.y} L ${arrowHead1.x} ${arrowHead1.y} M ${endPoint.x} ${endPoint.y} L ${arrowHead2.x} ${arrowHead2.y}`}
                     stroke={drawing.color}
                     strokeWidth={drawing.strokeWidth}
                     fill="none"
@@ -221,8 +200,8 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         if (!svgRef.current) return { x: 0, y: 0 }
         const rect = svgRef.current.getBoundingClientRect()
         const touch = e.touches[0] || e.changedTouches[0]
-        const x = ((touch.clientX - rect.left) / rect.width) * 100
-        const y = ((touch.clientY - rect.top) / rect.height) * 100
+        const x = ((touch.clientX - rect.left) / rect.width) * 105
+        const y = ((touch.clientY - rect.top) / rect.height) * 68
         return { x, y }
     }
 
@@ -241,8 +220,8 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         } else if (drawingMode === "draw") {
             const coords = getSvgTouchCoordinates(e)
             setIsDrawing(true)
-            setDrawingPoints([coords])
             drawingPointsRef.current = [coords]
+            setDrawingPoints([coords])
         } else if (drawingMode === "erase") {
             const coords = getSvgTouchCoordinates(e)
             const clickedDrawing = drawings.find(drawing => {
@@ -296,7 +275,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
-                    color: "#ff6b6b",
                     strokeWidth: 0.3,
                 })
             }
@@ -340,20 +318,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchCancel}
             >
-                {/* Arrow marker definition */}
-                <defs>
-                    <marker
-                        id="arrowhead"
-                        markerWidth="10"
-                        markerHeight="7"
-                        refX="9"
-                        refY="3.5"
-                        orient="auto"
-                    >
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#ff6b6b" />
-                    </marker>
-                </defs>
-
                 {/* Pitch Background */}
                 <rect x="0" y="0" width="105" height="68" fill="#22a745" />
 
@@ -404,11 +368,11 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 </g>
 
                 {/* Rendered drawings */}
-                {drawings.map((drawing, idx) => renderArrow(drawing, idx))}
+                {drawings.map((drawing, idx) => renderLine(drawing, idx))}
 
                 {/* Current drawing preview */}
                 {isDrawing && drawingPoints.length >= 2 && (
-                    renderArrow({ type: "arrow", points: drawingPoints, color: "#ff6b6b", strokeWidth: 0.3 }, -1)
+                    renderLine({ type: "arrow", points: drawingPoints, color: isHomeTeamActive ? homeTeam.color : awayTeam.color, strokeWidth: 0.3 }, -1)
                 )}
 
                 {/* Players: show both home and away */}
@@ -430,7 +394,12 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                             textAnchor="middle"
                             dy="0.5"
                             fontSize="1.1"
-                            fill="white"
+                            fill={
+                                (player.team === "home" && homeTeam.color === "#ffffff") ||
+                                    (player.team === "away" && awayTeam.color === "#ffffff")
+                                    ? "#222"
+                                    : "white"
+                            }
                             className="pointer-events-none select-none font-bold"
                         >
                             {player.number}

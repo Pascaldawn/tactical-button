@@ -83,9 +83,11 @@ export default function RecordPage() {
                     </div>
                 </div>
                 {/* Webcam overlay fixed at top right */}
-                <div className="fixed top-6 right-6 z-50 w-64 h-48 shadow-lg">
-                    <WebcamOverlay isRecording={isRecording} />
-                </div>
+                {showWebcam && (
+                    <div className="fixed top-20 right-6 z-50 w-64 h-auto shadow-lg rounded-lg overflow-hidden">
+                        <WebcamOverlay isRecording={isRecording} />
+                    </div>
+                )}
             </div>
         </TacticsBoardProvider>
     )

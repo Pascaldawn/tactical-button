@@ -6,17 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 import { useState } from "react"
 import { FormationSelector } from "@/components/formation-selector"
-
-const teamColors = [
-    "#ef4444", // red
-    "#3b82f6", // blue
-    "#22c55e", // green
-    "#f59e0b", // yellow
-    "#8b5cf6", // purple
-    "#06b6d4", // cyan
-    "#f97316", // orange
-    "#84cc16", // lime
-]
+import { teamColors } from "@/lib/constants"
 
 export function TeamConfigPanel() {
     const { homeTeam, awayTeam, updateHomeTeam, updateAwayTeam, isHomeTeamActive, setActiveTeam } = useTacticsBoardWithContext()
@@ -52,22 +42,20 @@ export function TeamConfigPanel() {
                         className="mt-1"
                     />
                 </div>
-                <div>
-                    <Label className="text-sm font-medium">Jersey Color</Label>
-                    <div className="grid grid-cols-4 gap-2 mt-2">
+                <div className="mt-4">
+                    <Label>Jersey Color</Label>
+                    <div className="grid grid-cols-5 gap-2 mt-2">
                         {teamColors.map((color) => (
-                            <Button
+                            <button
                                 key={color}
-                                variant="outline"
-                                size="sm"
-                                className="w-8 h-8 p-0 rounded-full bg-transparent"
-                                style={{ backgroundColor: color }}
+                                type="button"
+                                className="w-8 h-8 rounded-full border-2"
+                                style={{
+                                    backgroundColor: color,
+                                    borderColor: activeTeam.color === color ? (color === "#ffffff" ? "#000000" : "transparent") : "transparent",
+                                }}
                                 onClick={() => updateActiveTeam({ color })}
-                            >
-                                {activeTeam.color === color && (
-                                    <div className="w-2 h-2 bg-white rounded-full" />
-                                )}
-                            </Button>
+                            />
                         ))}
                     </div>
                 </div>
