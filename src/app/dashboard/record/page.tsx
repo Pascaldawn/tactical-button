@@ -56,13 +56,13 @@ export default function RecordPage() {
                     {/* Control Panel */}
                     <div className="xl:col-span-1 space-y-4 order-2 xl:order-1">
                         <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Recording Settings</h3>
-                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} />
+                            <h3 className="font-semibold mb-3 text-sm md:text-base">Drawing Tools</h3>
+                            <DrawingTools />
                         </Card>
 
                         <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Drawing Tools</h3>
-                            <DrawingTools />
+                            <h3 className="font-semibold mb-3 text-sm md:text-base">Recording Settings</h3>
+                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} />
                         </Card>
 
                         <Card className="p-3 md:p-4">

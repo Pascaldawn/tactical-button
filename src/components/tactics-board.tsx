@@ -1,8 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useState, useRef } from "react"
 
-import { useState, useRef } from "react"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 
 export const TacticsBoard = React.memo(function TacticsBoard() {
@@ -11,6 +10,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
     // Drawing state
     const [isDrawing, setIsDrawing] = useState(false)
     const [drawingPoints, setDrawingPoints] = useState<{ x: number; y: number }[]>([])
+    const drawingPointsRef = useRef<{ x: number; y: number }[]>([])
     const {
         players,
         updatePlayerPosition,
@@ -62,6 +62,15 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         return Math.sqrt(dx * dx + dy * dy)
     }
 
+    // Helper: minimum distance between points (in % of board width)
+    const MIN_DIST = 0.5
+    function shouldAddPoint(newPoint: { x: number; y: number }, lastPoint?: { x: number; y: number }) {
+        if (!lastPoint) return true
+        const dx = newPoint.x - lastPoint.x
+        const dy = newPoint.y - lastPoint.y
+        return Math.sqrt(dx * dx + dy * dy) > MIN_DIST
+    }
+
     const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
         if (drawingMode === "move") {
             // Handle player dragging (existing logic)
@@ -78,6 +87,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             const coords = getSvgCoordinates(e)
             setIsDrawing(true)
             setDrawingPoints([coords])
+            drawingPointsRef.current = [coords]
         } else if (drawingMode === "erase") {
             // Handle erasing
             const coords = getSvgCoordinates(e)
@@ -111,7 +121,11 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             updatePlayerPosition(draggedPlayer, boundedX, boundedY)
         } else if (drawingMode === "draw" && isDrawing) {
             const coords = getSvgCoordinates(e)
-            setDrawingPoints(prev => [...prev, coords])
+            const last = drawingPointsRef.current[drawingPointsRef.current.length - 1]
+            if (shouldAddPoint(coords, last)) {
+                drawingPointsRef.current.push(coords)
+                setDrawingPoints([...drawingPointsRef.current])
+            }
         }
     }
 
@@ -120,7 +134,11 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             setDraggedPlayer(null)
         } else if (drawingMode === "draw" && isDrawing) {
             const coords = getSvgCoordinates(e)
-            const finalPoints = [...drawingPoints, coords]
+            const last = drawingPointsRef.current[drawingPointsRef.current.length - 1]
+            if (shouldAddPoint(coords, last)) {
+                drawingPointsRef.current.push(coords)
+            }
+            const finalPoints = [...drawingPointsRef.current]
 
             if (finalPoints.length >= 2) {
                 addDrawing({
@@ -133,6 +151,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
             setIsDrawing(false)
             setDrawingPoints([])
+            drawingPointsRef.current = []
         }
     }
 
@@ -197,8 +216,108 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
     // Filter players to only show the active team
     const activeTeam = isHomeTeamActive ? "home" : "away"
 
+    // Add touch coordinate helper
+    const getSvgTouchCoordinates = (e: React.TouchEvent<SVGSVGElement>) => {
+        if (!svgRef.current) return { x: 0, y: 0 }
+        const rect = svgRef.current.getBoundingClientRect()
+        const touch = e.touches[0] || e.changedTouches[0]
+        const x = ((touch.clientX - rect.left) / rect.width) * 100
+        const y = ((touch.clientY - rect.top) / rect.height) * 100
+        return { x, y }
+    }
+
+    // Touch event handlers
+    const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+        if (drawingMode === "move") {
+            // Handle player dragging
+            const touch = e.target as SVGElement
+            const playerGroup = touch.closest('g[data-player-id]')
+            if (playerGroup) {
+                const playerId = playerGroup.getAttribute('data-player-id')
+                if (playerId) {
+                    setDraggedPlayer(playerId)
+                }
+            }
+        } else if (drawingMode === "draw") {
+            const coords = getSvgTouchCoordinates(e)
+            setIsDrawing(true)
+            setDrawingPoints([coords])
+            drawingPointsRef.current = [coords]
+        } else if (drawingMode === "erase") {
+            const coords = getSvgTouchCoordinates(e)
+            const clickedDrawing = drawings.find(drawing => {
+                if (drawing.type === "arrow" && drawing.points.length >= 2) {
+                    for (let i = 0; i < drawing.points.length - 1; i++) {
+                        const p1 = drawing.points[i]
+                        const p2 = drawing.points[i + 1]
+                        const distance = distanceToLineSegment(coords, p1, p2)
+                        if (distance < 3) {
+                            return true
+                        }
+                    }
+                }
+                return false
+            })
+            if (clickedDrawing) {
+                removeDrawing(clickedDrawing.id)
+            }
+        }
+        e.preventDefault()
+    }
+
+    const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+        if (drawingMode === "move" && draggedPlayer) {
+            const coords = getSvgTouchCoordinates(e)
+            const boundedX = Math.max(2, Math.min(98, coords.x))
+            const boundedY = Math.max(2, Math.min(98, coords.y))
+            updatePlayerPosition(draggedPlayer, boundedX, boundedY)
+        } else if (drawingMode === "draw" && isDrawing) {
+            const coords = getSvgTouchCoordinates(e)
+            const last = drawingPointsRef.current[drawingPointsRef.current.length - 1]
+            if (shouldAddPoint(coords, last)) {
+                drawingPointsRef.current.push(coords)
+                setDrawingPoints([...drawingPointsRef.current])
+            }
+        }
+        e.preventDefault()
+    }
+
+    const handleTouchEnd = (e: React.TouchEvent<SVGSVGElement>) => {
+        if (drawingMode === "move") {
+            setDraggedPlayer(null)
+        } else if (drawingMode === "draw" && isDrawing) {
+            const coords = getSvgTouchCoordinates(e)
+            const last = drawingPointsRef.current[drawingPointsRef.current.length - 1]
+            if (shouldAddPoint(coords, last)) {
+                drawingPointsRef.current.push(coords)
+            }
+            const finalPoints = [...drawingPointsRef.current]
+            if (finalPoints.length >= 2) {
+                addDrawing({
+                    type: "arrow",
+                    points: finalPoints,
+                    color: "#ff6b6b",
+                    strokeWidth: 0.3,
+                })
+            }
+            setIsDrawing(false)
+            setDrawingPoints([])
+            drawingPointsRef.current = []
+        }
+        e.preventDefault()
+    }
+
+    const handleTouchCancel = () => {
+        setDraggedPlayer(null)
+        if (isDrawing) {
+            setIsDrawing(false)
+            setDrawingPoints([])
+            drawingPointsRef.current = []
+        }
+    }
+
     return (
-        <div className="w-full min-w-0 min-h-[180px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] xl:min-h-[520px] h-full flex items-center justify-center rounded-lg overflow-hidden relative" data-tactics-board>
+        <div className="w-full min-w-0 min-h-[180px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] xl:min-h-[520px] h-full flex items-center justify-center rounded-lg overflow-hidden relative" data-tactics-board style={{ touchAction: 'none' }}>
             {drawingMode !== "move" && (
                 <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs z-10">
                     {drawingMode === "draw" ? "Drawing Mode - Click and drag to draw arrows" : "Erase Mode - Click on arrows to remove"}
@@ -211,10 +330,15 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                     drawingMode === "erase" ? "cursor-pointer" :
                         "cursor-default"
                     }`}
+                style={{ touchAction: 'none' }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchCancel}
             >
                 {/* Arrow marker definition */}
                 <defs>

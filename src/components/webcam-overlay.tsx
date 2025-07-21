@@ -25,20 +25,34 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
             if (streamRef.current) {
                 stopWebcam()
             }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                setHasPermission(false)
+                setIsWebcamOn(false)
+                setError('Camera/microphone not supported in this browser or device.')
+                return
+            }
             console.log('Requesting default/internal webcam...')
             const constraints: MediaStreamConstraints = {
                 video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
-                audio: false,
+                audio: true,
             }
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
             console.log('Webcam stream obtained:', stream)
             streamRef.current = stream
             setHasPermission(true)
         } catch (err: unknown) {
+            let userMessage = ''
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                userMessage = 'Camera/microphone not supported in this browser or device.\n\nTry the following:\n- Use Chrome/Safari, avoid in-app browsers, ensure HTTPS, and check permissions.'
+            } else if (err instanceof Error) {
+                userMessage = (err.message || 'Could not access webcam') + '\n\nTroubleshooting tips:\n- Use Chrome (Android) or Safari (iOS)\n- Avoid in-app browsers (Facebook, Instagram, Twitter, etc.)\n- Make sure you are using HTTPS (not HTTP)\n- Check your browser and OS permissions.'
+            } else {
+                userMessage = 'Unknown error accessing camera/microphone.\n\nTry using Chrome (Android) or Safari (iOS), avoid in-app browsers, and check permissions.'
+            }
+            setHasPermission(false)
+            setIsWebcamOn(false)
+            setError(userMessage)
             if (err instanceof Error) {
-                setHasPermission(false)
-                setIsWebcamOn(false)
-                setError(err.message || 'Could not access webcam')
                 console.error('Error accessing webcam:', err)
             }
         }
@@ -121,7 +135,7 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
                     <div className="text-center">
                         <VideoOff className="w-8 h-8 mx-auto mb-2" />
                         <p className="text-sm">Webcam Off</p>
-                        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+                        {error && <p className="text-xs text-red-500 mt-1 whitespace-pre-line">{error}</p>}
                     </div>
                 </div>
             )}
