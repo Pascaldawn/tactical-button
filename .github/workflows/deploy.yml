@@ -1,0 +1,21 @@
+name: Deploy Frontend Staging
+
+on:
+  push:
+    branches:
+      - new-staging
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: [self-hosted, staging]
+    steps:
+      - name: Deploy Frontend
+        run: |
+          echo "Deploying Frontend..."
+          cd /var/www/frontend-staging
+          git checkout staging
+          git pull origin staging
+          npm install
+          npm run build
+          pm2 restart staging-frontend
