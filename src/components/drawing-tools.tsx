@@ -15,18 +15,18 @@ export function DrawingTools() {
     ]
 
     return (
-        <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-1">
                 {tools.map((tool) => (
                     <Button
                         key={tool.id}
                         variant={drawingMode === tool.id ? "default" : "outline"}
                         size="sm"
                         onClick={() => changeDrawingMode(tool.id as 'move' | 'draw' | 'erase')}
-                        className="flex flex-col items-center space-y-1 h-auto py-2"
+                        className="flex items-center space-x-2 h-auto py-1 px-2"
                         title={tool.description}
                     >
-                        <tool.icon className="w-4 h-4" />
+                        <tool.icon className="w-3.5 h-3.5" />
                         <span className="text-xs">{tool.label}</span>
                     </Button>
                 ))}

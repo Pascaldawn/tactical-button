@@ -15,6 +15,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
+    useSidebar,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -46,6 +47,7 @@ const navigationItems = [
 export function DashboardSidebar() {
     const pathname = usePathname()
     const { user, logout } = useAuth()
+    const { setOpen, setOpenMobile } = useSidebar()
 
     return (
         <Sidebar collapsible="icon">
@@ -64,7 +66,13 @@ export function DashboardSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {navigationItems.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                                <SidebarMenuItem
+                                    key={item.title}
+                                    onClick={() => {
+                                        setOpen(false)
+                                        setOpenMobile(false)
+                                    }}
+                                >
                                     <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                                         <Link href={item.url}>
                                             <item.icon />
