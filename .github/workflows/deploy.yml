@@ -14,8 +14,8 @@ jobs:
         run: |
           echo "Deploying Frontend..."
           cd /var/www/frontend-staging
-          git checkout staging
-          git pull origin staging
+          git checkout new-staging
+          git pull origin new-staging
           npm install
           npm run build
           pm2 restart staging-frontend
