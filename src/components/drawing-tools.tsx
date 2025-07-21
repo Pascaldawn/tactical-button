@@ -6,7 +6,7 @@ import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 import { Pen, Eraser, RotateCcw, Move } from "lucide-react"
 
 export function DrawingTools() {
-    const { drawingMode, changeDrawingMode, clearDrawings } = useTacticsBoardWithContext()
+    const { drawingMode, changeDrawingMode, resetBoard } = useTacticsBoardWithContext()
 
     const tools = [
         { id: "move", label: "Move", icon: Move, description: "Drag players" },
@@ -34,7 +34,7 @@ export function DrawingTools() {
 
             <Separator />
 
-            <Button variant="outline" size="sm" onClick={clearDrawings} className="w-full bg-transparent">
+            <Button variant="outline" size="sm" onClick={resetBoard} className="w-full bg-transparent">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Board
             </Button>

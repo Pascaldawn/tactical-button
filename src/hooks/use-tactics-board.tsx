@@ -372,6 +372,21 @@ export function useTacticsBoard() {
         setIsHomeTeamActive(team === "home")
     }, [])
 
+    // Add a resetBoard function
+    const resetBoard = useCallback(() => {
+        setPlayers([
+            ...defaultFormations["4-3-3"].home.map((p) => ({ ...p, team: "home" as const })),
+            ...defaultFormations["4-3-3"].away.map((p) => ({ ...p, team: "away" as const })),
+        ])
+        setHomeTeam({ name: "Home Team", color: "#ef4444" })
+        setAwayTeam({ name: "Away Team", color: "#3b82f6" })
+        setHomeFormation("4-3-3")
+        setAwayFormation("4-3-3")
+        setDrawingMode("move")
+        setDrawings([])
+        setIsHomeTeamActive(true)
+    }, [])
+
     return {
         players,
         homeTeam,
@@ -392,6 +407,7 @@ export function useTacticsBoard() {
         saveBoard,
         loadBoard,
         setActiveTeam,
+        resetBoard,
     }
 }
 
