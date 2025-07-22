@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils"
 interface WebcamOverlayProps {
     isRecording: boolean
     className?: string
+    videoRef?: React.RefObject<HTMLVideoElement>
 }
 
-export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
+export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverlayProps) {
     const [isWebcamOn, setIsWebcamOn] = useState(true) // default ON
     const [hasPermission, setHasPermission] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    // Remove device selection logic
-    const videoRef = useRef<HTMLVideoElement>(null)
+    const internalVideoRef = useRef<HTMLVideoElement>(null)
     const streamRef = useRef<MediaStream | null>(null)
 
     // Move startWebcam above useEffect
@@ -78,9 +78,10 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
 
     // Assign stream to video element after both are available
     useEffect(() => {
-        if (hasPermission && videoRef.current && streamRef.current) {
-            videoRef.current.srcObject = streamRef.current
-            videoRef.current.play().catch(console.error)
+        const ref = videoRef ? videoRef.current : internalVideoRef.current;
+        if (hasPermission && ref && streamRef.current) {
+            ref.srcObject = streamRef.current
+            ref.play().catch(console.error)
             const videoTrack = streamRef.current.getVideoTracks()[0]
             if (videoTrack) {
                 console.log('Video track state:', videoTrack)
@@ -89,15 +90,15 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
             }
             console.log('Webcam stream attached to video element (effect)')
         }
-    }, [hasPermission, isWebcamOn, startWebcam])
+    }, [hasPermission, isWebcamOn, startWebcam, videoRef])
 
     const stopWebcam = () => {
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((track) => track.stop())
             streamRef.current = null
         }
-        if (videoRef.current) {
-            videoRef.current.srcObject = null
+        if (internalVideoRef.current) {
+            internalVideoRef.current.srcObject = null
         }
         setHasPermission(false)
         setError(null)
@@ -114,7 +115,7 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
             {isWebcamOn && hasPermission ? (
                 <>
                     <video
-                        ref={videoRef}
+                        ref={videoRef ? videoRef : internalVideoRef}
                         className="webcam-overlay-video w-full h-full object-cover"
                         autoPlay
                         muted
@@ -133,9 +134,7 @@ export function WebcamOverlay({ isRecording, className }: WebcamOverlayProps) {
             ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">
                     <div className="text-center">
-                        <VideoOff className="w-8 h-8 mx-auto mb-2" />
                         <p className="text-sm">Webcam Off</p>
-                        {error && <p className="text-xs text-red-500 mt-1 whitespace-pre-line">{error}</p>}
                     </div>
                 </div>
             )}

@@ -187,6 +187,8 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                     stroke={drawing.color}
                     strokeWidth={drawing.strokeWidth}
                     fill="none"
+                    markerEnd="url(#arrowhead)"
+                    style={{ color: drawing.color }}
                 />
             </g>
         )
@@ -318,6 +320,20 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchCancel}
             >
+                {/* Arrowhead marker definition */}
+                <defs>
+                    <marker
+                        id="arrowhead"
+                        markerWidth="6"
+                        markerHeight="6"
+                        refX="5"
+                        refY="3"
+                        orient="auto"
+                        markerUnits="strokeWidth"
+                    >
+                        <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
+                    </marker>
+                </defs>
                 {/* Pitch Background */}
                 <rect x="0" y="0" width="105" height="68" fill="#22a745" />
 

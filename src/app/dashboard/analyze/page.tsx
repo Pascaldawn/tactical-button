@@ -19,11 +19,9 @@ export default function AnalyzePage() {
                             Create and analyze tactical formations and movements
                         </p>
                     </div>
-                    <BoardActions />
                 </div>
-
-                <div className="flex flex-1 flex-col-reverse md:flex-row gap-4 md:gap-6 w-full min-h-0">
-                    {/* Control Panel */}
+                {/* Control Panel */}
+                <div className="w-full flex flex-col md:flex-row gap-6">
                     <div className="w-full md:max-w-xs lg:max-w-sm xl:max-w-[320px] space-y-4 md:order-1 flex-shrink-0">
                         <Card className="p-3 md:p-4">
                             <h3 className="font-semibold mb-3 text-sm md:text-base">Drawing Tools</h3>
@@ -34,7 +32,6 @@ export default function AnalyzePage() {
                             <TeamConfigPanel />
                         </Card>
                     </div>
-
                     {/* Tactics Board */}
                     <div className="flex-1 md:order-2 min-h-[300px] h-full px-0 flex items-center justify-center">
                         <TacticsBoard />
