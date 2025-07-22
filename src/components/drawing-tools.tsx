@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 import { Pen, Eraser, RotateCcw, Move } from "lucide-react"
 
-export function DrawingTools() {
+export function DrawingTools({ onAnyChange }: { onAnyChange?: () => void } = {}) {
     const { drawingMode, changeDrawingMode, resetBoard } = useTacticsBoardWithContext()
 
     const tools = [
@@ -22,7 +22,10 @@ export function DrawingTools() {
                         key={tool.id}
                         variant={drawingMode === tool.id ? "default" : "outline"}
                         size="sm"
-                        onClick={() => changeDrawingMode(tool.id as 'move' | 'draw' | 'erase')}
+                        onClick={() => {
+                            changeDrawingMode(tool.id as 'move' | 'draw' | 'erase');
+                            if (onAnyChange) onAnyChange();
+                        }}
                         className="flex items-center space-x-2 h-auto py-1 px-2"
                         title={tool.description}
                     >
@@ -34,7 +37,7 @@ export function DrawingTools() {
 
             <Separator />
 
-            <Button variant="outline" size="sm" onClick={resetBoard} className="w-full bg-transparent">
+            <Button variant="outline" size="sm" onClick={() => { resetBoard(); if (onAnyChange) onAnyChange(); }} className="w-full bg-transparent">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset Board
             </Button>

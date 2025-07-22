@@ -31,11 +31,13 @@ function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number):
 interface RecordingControlsProps {
     isRecording: boolean
     onRecordingChange: (recording: boolean) => void
+    webcamVideoRef: React.RefObject<HTMLVideoElement>
 }
 
 export function RecordingControls({
     isRecording,
     onRecordingChange,
+    webcamVideoRef,
 }: RecordingControlsProps) {
     const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
     const [isExporting, setIsExporting] = useState(false)
@@ -49,7 +51,6 @@ export function RecordingControls({
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const recordedChunksRef = useRef<Blob[]>([])
     const animationFrameRef = useRef<number | null>(null)
-    const webcamVideoRef = useRef<HTMLVideoElement | null>(null)
     const recordingActiveRef = useRef(false);
 
     // Cache for tactics board image
@@ -119,31 +120,27 @@ export function RecordingControls({
         setRecordedBlob(null);
         recordedChunksRef.current = [];
         try {
-            // Request 4K screen capture at 60fps
-            let screenStream;
-            try {
-                screenStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: {
-                        frameRate: 60,
-                        width: { ideal: 3840 },
-                        height: { ideal: 2160 }
-                    },
-                    audio: false
-                });
-            } catch (err) {
-                // Fallback to Full HD
-                screenStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: {
-                        frameRate: 60,
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    },
-                    audio: false
-                });
-            }
+            // 1. Prepare off-screen canvas
+            const width = 1280;
+            const height = 853;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvasRef.current = canvas;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Could not get canvas context');
 
-            // Request microphone audio
-            let audioStream;
+            // 2. Get SVG node for tactics board
+            const board = document.querySelector('[data-tactics-board]') as HTMLElement;
+            if (!board) throw new Error('Tactics board not found');
+            const svg = board.querySelector('svg');
+            if (!svg) throw new Error('SVG not found');
+
+            // 3. Prepare webcam video
+            const webcamVideo = webcamVideoRef?.current;
+
+            // 4. Get microphone audio
+            let audioStream: MediaStream | null = null;
             try {
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch (err) {
@@ -151,12 +148,44 @@ export function RecordingControls({
                 audioStream = null;
             }
 
-            // Combine video and audio tracks
+            // 5. Animation loop: draw SVG and webcam to canvas
+            let running = true;
+            const drawFrame = () => {
+                if (!running) return;
+                // Draw tactics board SVG
+                const serializer = new XMLSerializer();
+                const svgString = serializer.serializeToString(svg);
+                const img = new window.Image();
+                const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                img.onload = () => {
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+                    URL.revokeObjectURL(url);
+                    // Draw webcam video (bottom right, 320x240)
+                    if (webcamVideo && webcamVideo.readyState >= 2) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.roundRect(width - 340, height - 260, 320, 240, 16);
+                        ctx.clip();
+                        ctx.drawImage(webcamVideo, width - 340, height - 260, 320, 240);
+                        ctx.restore();
+                    }
+                };
+                img.src = url;
+                animationFrameRef.current = requestAnimationFrame(drawFrame);
+            };
+            drawFrame();
+
+            // 6. Get canvas stream
+            const canvasStream = canvas.captureStream(30);
+            // 7. Combine with audio
             const combinedStream = new MediaStream([
-                ...screenStream.getVideoTracks(),
+                ...canvasStream.getVideoTracks(),
                 ...(audioStream ? audioStream.getAudioTracks() : [])
             ]);
 
+            // 8. Start MediaRecorder
             mediaRecorderRef.current = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
             recordedChunksRef.current = [];
             mediaRecorderRef.current.ondataavailable = (event) => {
@@ -165,19 +194,20 @@ export function RecordingControls({
                 }
             };
             mediaRecorderRef.current.onstop = () => {
+                running = false;
+                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
                 const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
                 setRecordedBlob(blob);
                 // Clean up all tracks
                 combinedStream.getTracks().forEach(track => track.stop());
                 if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                if (screenStream) screenStream.getTracks().forEach(track => track.stop());
                 mediaRecorderRef.current = null;
             };
             mediaRecorderRef.current.start();
             onRecordingChange(true);
-            toast.success("Recording started", { description: "Select the browser tab with your tactics board for best results. All visible movements, overlays, and your voice will be recorded in high quality." });
+            toast.success("Recording started", { description: "Your tactics board, webcam, and audio are being recorded." });
         } catch (err) {
-            toast.error("Screen recording failed", { description: "Could not start screen recording. Please allow screen and microphone capture and try again." });
+            toast.error("Recording failed", { description: "Could not start recording. Please allow microphone and webcam access and try again." });
         }
     }
 
@@ -254,21 +284,6 @@ export function RecordingControls({
 
     return (
         <div className="space-y-4">
-            {/* Aspect Ratio */}
-            <div>
-                <Label className="text-sm font-medium">Aspect Ratio</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                    <SelectTrigger className="mt-1">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
-                        <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-                        <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
             {/* Recording Timer */}
             <div className="flex items-center space-x-2 text-sm">
                 <Clock className="w-4 h-4" />
@@ -322,19 +337,6 @@ export function RecordingControls({
                     </div>
                 )}
             </div>
-
-            {/* Recording Note */}
-            <div className="mb-2 text-xs text-muted-foreground">
-                <b>When you click Start Recording, select the browser tab with your tactics board.</b> All visible movements, overlays, and the webcam will be recorded in high quality.
-            </div>
-
-            {/* Subscription Notice */}
-            {!user?.subscription?.active && (
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                    <p>Free plan: 2 min recordings, watermarked exports</p>
-                    <p>Upgrade for unlimited recording and HD exports</p>
-                </div>
-            )}
         </div>
     )
 }

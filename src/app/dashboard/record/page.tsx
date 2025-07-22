@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { TacticsBoard } from "@/components/tactics-board"
 import { TeamConfigPanel } from "@/components/team-config-panel"
 import { FormationSelector } from "@/components/formation-selector"
@@ -12,10 +12,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Video } from "lucide-react"
 import { TacticsBoardProvider } from "@/hooks/use-tactics-board"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { BoardActions } from "@/components/board-actions"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function RecordPage() {
     const [isRecording, setIsRecording] = useState(false)
     const [showWebcam, setShowWebcam] = useState(true)
+    const [openFormation, setOpenFormation] = useState(false)
+    const [openMovement, setOpenMovement] = useState(false)
+
+    // Webcam video ref for compositing
+    const webcamVideoRef = useRef<HTMLVideoElement>(null)
+
+    // For each DropdownMenu, add local open state and setOpen
+    const [openTeamsDropdown, setOpenTeamsDropdown] = useState(false);
+    const [openMovementDropdown, setOpenMovementDropdown] = useState(false);
+
+    const isMobile = useIsMobile();
 
     return (
         <TacticsBoardProvider>
@@ -26,67 +40,94 @@ export default function RecordPage() {
                     left: 0,
                     width: '100vw',
                     height: '100vh',
-                    border: '6px solid #e11d48', // Tailwind's red-600
+                    border: '6px solid #e11d48',
                     boxSizing: 'border-box',
                     zIndex: 9999,
                     pointerEvents: 'none',
                 }} />
             )}
-            <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto relative">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold">Record Session</h1>
-                        <p className="text-muted-foreground text-sm md:text-base">Record tactical explanations with webcam overlay</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        {isRecording && (
-                            <Badge variant="destructive" className="animate-pulse">
-                                <div className="w-2 h-2 bg-white rounded-full mr-2"></div>
-                                Recording
-                            </Badge>
-                        )}
-                        <Button variant="outline" size="sm" onClick={() => setShowWebcam(!showWebcam)}>
-                            <Video className="w-4 h-4 mr-2" />
-                            {showWebcam ? "Hide" : "Show"} Webcam
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
-                    {/* Control Panel */}
-                    <div className="xl:col-span-1 space-y-4 order-2 xl:order-1">
-                        <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Drawing Tools</h3>
-                            <DrawingTools />
-                        </Card>
-
-                        <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Recording Settings</h3>
-                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} />
-                        </Card>
-
-                        <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Team Configuration</h3>
-                            <TeamConfigPanel />
-                        </Card>
-                    </div>
-
-                    {/* Recording Area */}
-                    <div className="xl:col-span-3 order-1 xl:order-2">
-                        <Card className="p-3 md:p-4 relative">
-                            {/* Recording Note */}
-                            <div className="mb-2 text-xs text-muted-foreground">
-                                For best results, <b>select the browser tab</b> when prompted for screen recording. This will include the webcam overlay in your video.
-                            </div>
+            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+                {isMobile ? (
+                    // Mobile Layout
+                    <div className="flex flex-col w-full gap-4">
+                        {/* Tactics Board (at the top) */}
+                        <div className="w-full bg-[#22a745] rounded-lg p-2 flex items-center justify-center" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}>
                             <TacticsBoard />
-                        </Card>
+                        </div>
+                        {/* Options Buttons (Teams, Movement) now below tactics board */}
+                        <div className="flex flex-wrap gap-3 w-full justify-end">
+                            <DropdownMenu open={openTeamsDropdown} onOpenChange={setOpenTeamsDropdown}>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="lg" className="min-w-[120px]">Teams</Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <div className="p-2 min-w-[220px]">
+                                        <TeamConfigPanel onAnyChange={() => setOpenTeamsDropdown(false)} />
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu open={openMovementDropdown} onOpenChange={setOpenMovementDropdown}>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="lg" className="min-w-[120px]">Movement</Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <div className="p-2 min-w-[220px]">
+                                        <DrawingTools onAnyChange={() => setOpenMovementDropdown(false)} />
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        {/* Webcam Card (smaller on mobile, now below options) */}
+                        <div className="w-full aspect-video rounded-lg overflow-hidden bg-white flex items-center justify-center" style={{ maxWidth: '320px', margin: '0 auto' }}>
+                            <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
+                        </div>
+                        {/* Recording Controls */}
+                        <div className="w-full">
+                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} />
+                        </div>
                     </div>
-                </div>
-                {/* Webcam overlay fixed at top right */}
-                {showWebcam && (
-                    <div className="fixed top-20 right-6 z-50 w-64 h-auto shadow-lg rounded-lg overflow-hidden">
-                        <WebcamOverlay isRecording={isRecording} />
-                    </div>
+                ) : (
+                    // Desktop Layout
+                    <>
+                        <div className="flex flex-col items-center flex-1 min-w-0">
+                            <div className="w-full bg-[#22a745] rounded-lg p-2 flex items-center justify-center" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}>
+                                <TacticsBoard />
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center w-full max-w-xs gap-6">
+                            {/* Webcam Card at the top */}
+                            <div className="w-full aspect-video rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                                <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
+                            </div>
+                            {/* Teams and Movement Buttons below webcam */}
+                            <div className="flex flex-wrap gap-3 w-full justify-center mt-4">
+                                <DropdownMenu open={openTeamsDropdown} onOpenChange={setOpenTeamsDropdown}>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="lg" className="min-w-[120px]">Teams</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <div className="p-2 min-w-[220px]">
+                                            <TeamConfigPanel onAnyChange={() => setOpenTeamsDropdown(false)} />
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <DropdownMenu open={openMovementDropdown} onOpenChange={setOpenMovementDropdown}>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="lg" className="min-w-[120px]">Movement</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <div className="p-2 min-w-[220px]">
+                                            <DrawingTools onAnyChange={() => setOpenMovementDropdown(false)} />
+                                        </div>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            {/* Recording Controls below buttons */}
+                            <div className="w-full mt-2">
+                                <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} />
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         </TacticsBoardProvider>

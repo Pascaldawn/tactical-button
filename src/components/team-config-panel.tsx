@@ -8,7 +8,7 @@ import { useState } from "react"
 import { FormationSelector } from "@/components/formation-selector"
 import { teamColors } from "@/lib/constants"
 
-export function TeamConfigPanel() {
+export function TeamConfigPanel({ onAnyChange }: { onAnyChange?: () => void } = {}) {
     const { homeTeam, awayTeam, updateHomeTeam, updateAwayTeam, isHomeTeamActive, setActiveTeam } = useTacticsBoardWithContext()
     const [tab, setTab] = useState(isHomeTeamActive ? "home" : "away")
 
@@ -16,10 +16,15 @@ export function TeamConfigPanel() {
     const handleTabChange = (team: "home" | "away") => {
         setTab(team)
         setActiveTeam(team)
+        if (onAnyChange) onAnyChange();
     }
 
     const activeTeam = tab === "home" ? homeTeam : awayTeam
-    const updateActiveTeam = tab === "home" ? updateHomeTeam : updateAwayTeam
+    const updateActiveTeam = (update: Partial<typeof homeTeam>) => {
+        if (tab === "home") updateHomeTeam(update)
+        else updateAwayTeam(update)
+        if (onAnyChange) onAnyChange();
+    }
 
     return (
         <div className="space-y-4">
