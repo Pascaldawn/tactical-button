@@ -78,7 +78,7 @@ export default function RecordPage() {
                             </DropdownMenu>
                         </div>
                         {/* Webcam Card (smaller on mobile, now below options) */}
-                        <div className="w-full aspect-video rounded-lg overflow-hidden bg-white flex items-center justify-center" style={{ maxWidth: '320px', margin: '0 auto' }}>
+                        <div className="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden bg-white flex items-center justify-center mx-auto">
                             <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
                         </div>
                         {/* Recording Controls */}
@@ -96,7 +96,7 @@ export default function RecordPage() {
                         </div>
                         <div className="flex flex-col items-center w-full max-w-xs gap-6">
                             {/* Webcam Card at the top */}
-                            <div className="w-full aspect-video rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                            <div className="w-56 h-56 rounded-full overflow-hidden bg-white flex items-center justify-center">
                                 <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
                             </div>
                             {/* Teams and Movement Buttons below webcam */}
