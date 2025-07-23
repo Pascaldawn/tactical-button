@@ -18,6 +18,11 @@ export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverla
     const internalVideoRef = useRef<HTMLVideoElement>(null)
     const streamRef = useRef<MediaStream | null>(null)
 
+    const isMobileDevice = typeof window !== 'undefined' && (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        window.matchMedia('(max-width: 767px)').matches
+    );
+
     // Move startWebcam above useEffect
     const startWebcam = async () => {
         setError(null)
@@ -33,7 +38,11 @@ export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverla
             }
             console.log('Requesting default/internal webcam...')
             const constraints: MediaStreamConstraints = {
-                video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+                video: {
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: { ideal: 'user' }
+                },
                 audio: true,
             }
             const stream = await navigator.mediaDevices.getUserMedia(constraints)
@@ -107,16 +116,16 @@ export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverla
     return (
         <div
             className={cn(
-                "relative w-full h-full bg-neutral-100 border border-neutral-300 overflow-hidden",
+                "relative w-full h-full bg-neutral-100 border border-neutral-300 overflow-hidden rounded-full",
                 className
             )}
-            style={{ borderRadius: 12, boxShadow: "0 2px 8px 0 rgba(0,0,0,0.10)" }}
+            style={{ boxShadow: "0 2px 8px 0 rgba(0,0,0,0.10)" }}
         >
             {isWebcamOn && hasPermission ? (
                 <>
                     <video
                         ref={videoRef ? videoRef : internalVideoRef}
-                        className="webcam-overlay-video w-full h-full object-cover"
+                        className="webcam-overlay-video w-full h-full object-cover rounded-full"
                         autoPlay
                         muted
                         playsInline
@@ -138,18 +147,8 @@ export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverla
                     </div>
                 </div>
             )}
-            {/* Camera toggle button as floating icon in top right */}
-            <div className="absolute top-2 right-2 z-10">
-                <Button
-                    size="icon"
-                    variant={isWebcamOn ? "destructive" : "secondary"}
-                    onClick={() => setIsWebcamOn(!isWebcamOn)}
-                    className="h-8 w-8 p-0 rounded-full shadow"
-                    aria-label={isWebcamOn ? "Turn off webcam" : "Turn on webcam"}
-                >
-                    {isWebcamOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-                </Button>
-            </div>
+            {/* Camera toggle button centered in the webcam card */}
+            {/* Removed camera toggle button as per user request */}
         </div>
     )
 }
