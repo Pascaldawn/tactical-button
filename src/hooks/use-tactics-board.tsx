@@ -322,11 +322,11 @@ export function useTacticsBoard() {
         setDrawingMode(mode)
     }, [])
 
-    const addDrawing = useCallback((drawing: Omit<DrawingElement, "id" | "color">) => {
+    const addDrawing = useCallback((drawing: Omit<DrawingElement, "id">) => {
         const newDrawing: DrawingElement = {
             ...drawing,
             id: `drawing-${Date.now()}-${Math.random()}`,
-            color: isHomeTeamActive ? homeTeam.color : awayTeam.color,
+            color: drawing.color || (isHomeTeamActive ? homeTeam.color : awayTeam.color),
         }
         setDrawings((prev) => [...prev, newDrawing])
     }, [isHomeTeamActive, homeTeam.color, awayTeam.color])
