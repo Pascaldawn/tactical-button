@@ -15,31 +15,30 @@ export function DrawingTools({ onAnyChange }: { onAnyChange?: () => void } = {})
     ]
 
     return (
-        <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-1">
-                {tools.map((tool) => (
-                    <Button
-                        key={tool.id}
-                        variant={drawingMode === tool.id ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                            changeDrawingMode(tool.id as 'move' | 'draw' | 'erase');
-                            if (onAnyChange) onAnyChange();
-                        }}
-                        className="flex items-center space-x-2 h-auto py-1 px-2"
-                        title={tool.description}
-                    >
-                        <tool.icon className="w-3.5 h-3.5" />
-                        <span className="text-xs">{tool.label}</span>
-                    </Button>
-                ))}
-            </div>
-
-            <Separator />
-
-            <Button variant="outline" size="sm" onClick={() => { resetBoard(); if (onAnyChange) onAnyChange(); }} className="w-full bg-transparent">
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Board
+        <div className="flex flex-row gap-2 items-center justify-center">
+            {tools.map((tool) => (
+                <Button
+                    key={tool.id}
+                    variant={drawingMode === tool.id ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => {
+                        changeDrawingMode(tool.id as 'move' | 'draw' | 'erase');
+                        if (onAnyChange) onAnyChange();
+                    }}
+                    className="h-10 w-10 flex items-center justify-center"
+                    title={tool.description}
+                >
+                    <tool.icon className="w-5 h-5" />
+                </Button>
+            ))}
+            <Button
+                variant="outline"
+                size="icon"
+                onClick={() => { resetBoard(); if (onAnyChange) onAnyChange(); }}
+                className="h-10 w-10 flex items-center justify-center"
+                title="Reset Board"
+            >
+                <RotateCcw className="w-5 h-5" />
             </Button>
         </div>
     )

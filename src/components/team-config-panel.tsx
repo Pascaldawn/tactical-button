@@ -27,45 +27,45 @@ export function TeamConfigPanel({ onAnyChange }: { onAnyChange?: () => void } = 
     }
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-row items-end gap-2 text-xs min-w-[320px] flex-wrap">
             {/* Team Tabs */}
-            <div className="flex space-x-2 mb-2">
-                <Button variant={tab === "home" ? "default" : "outline"} size="sm" onClick={() => handleTabChange("home")}>Home Team</Button>
-                <Button variant={tab === "away" ? "default" : "outline"} size="sm" onClick={() => handleTabChange("away")}>Away Team</Button>
+            <div className="flex space-x-1">
+                <Button variant={tab === "home" ? "default" : "outline"} size="sm" className="px-2 py-1 text-xs h-7" onClick={() => handleTabChange("home")}>Home</Button>
+                <Button variant={tab === "away" ? "default" : "outline"} size="sm" className="px-2 py-1 text-xs h-7" onClick={() => handleTabChange("away")}>Away</Button>
             </div>
-            {/* Active Team Configuration */}
-            <div className="space-y-3">
-                <div>
-                    <Label htmlFor="teamName" className="text-sm font-medium">
-                        Team Name
-                    </Label>
-                    <Input
-                        id="teamName"
-                        value={activeTeam.name}
-                        onChange={(e) => updateActiveTeam({ name: e.target.value })}
-                        placeholder="Enter team name"
-                        className="mt-1"
-                    />
+            {/* Team Name */}
+            <div className="flex flex-col">
+                <Label htmlFor="teamName" className="text-xs font-medium mb-1">Team Name</Label>
+                <Input
+                    id="teamName"
+                    value={activeTeam.name}
+                    onChange={(e) => updateActiveTeam({ name: e.target.value })}
+                    placeholder="Enter team name"
+                    className="h-7 text-xs px-2 py-1 w-[100px]"
+                />
+            </div>
+            {/* Jersey Colors */}
+            <div className="flex flex-col">
+                <Label className="text-xs mb-1">Jersey Color</Label>
+                <div className="flex flex-row gap-1">
+                    {teamColors.map((color) => (
+                        <button
+                            key={color}
+                            type="button"
+                            className="w-6 h-6 rounded-full border"
+                            style={{
+                                backgroundColor: color,
+                                borderColor: activeTeam.color === color ? (color === "#ffffff" ? "#000000" : "#222") : "#ccc",
+                            }}
+                            onClick={() => updateActiveTeam({ color })}
+                        />
+                    ))}
                 </div>
-                <div className="mt-4">
-                    <Label>Jersey Color</Label>
-                    <div className="grid grid-cols-5 gap-2 mt-2">
-                        {teamColors.map((color) => (
-                            <button
-                                key={color}
-                                type="button"
-                                className="w-8 h-8 rounded-full border-2"
-                                style={{
-                                    backgroundColor: color,
-                                    borderColor: activeTeam.color === color ? (color === "#ffffff" ? "#000000" : "transparent") : "transparent",
-                                }}
-                                onClick={() => updateActiveTeam({ color })}
-                            />
-                        ))}
-                    </div>
-                </div>
+            </div>
+            {/* Formation Selector */}
+            <div className="flex flex-col">
+                <Label className="text-xs font-medium mb-1">Formation</Label>
                 <div>
-                    <Label className="text-sm font-medium">Formation</Label>
                     <FormationSelector />
                 </div>
             </div>
