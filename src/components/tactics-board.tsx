@@ -23,6 +23,9 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         isHomeTeamActive // <-- add this
     } = useTacticsBoardWithContext()
 
+    // Add state to track current drawing color
+    const [currentDrawColor, setCurrentDrawColor] = useState<string>(homeTeam.color);
+
     const getSvgCoordinates = (e: React.MouseEvent<SVGSVGElement>) => {
         if (!svgRef.current) return { x: 0, y: 0 }
         const rect = svgRef.current.getBoundingClientRect()
@@ -84,10 +87,13 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             }
         } else if (drawingMode === "draw") {
             // Start drawing
-            const coords = getSvgCoordinates(e)
-            setIsDrawing(true)
-            drawingPointsRef.current = [coords]
-            setDrawingPoints([coords])
+            const coords = getSvgCoordinates(e);
+            // Determine color based on starting x
+            const color = coords.x < 52.5 ? homeTeam.color : awayTeam.color;
+            setCurrentDrawColor(color);
+            setIsDrawing(true);
+            drawingPointsRef.current = [coords];
+            setDrawingPoints([coords]);
         } else if (drawingMode === "erase") {
             // Handle erasing
             const coords = getSvgCoordinates(e)
@@ -144,6 +150,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
+                    color: currentDrawColor,
                     strokeWidth: 0.3,
                 })
             }
@@ -220,10 +227,13 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 }
             }
         } else if (drawingMode === "draw") {
-            const coords = getSvgTouchCoordinates(e)
-            setIsDrawing(true)
-            drawingPointsRef.current = [coords]
-            setDrawingPoints([coords])
+            const coords = getSvgTouchCoordinates(e);
+            // Determine color based on starting x
+            const color = coords.x < 52.5 ? homeTeam.color : awayTeam.color;
+            setCurrentDrawColor(color);
+            setIsDrawing(true);
+            drawingPointsRef.current = [coords];
+            setDrawingPoints([coords]);
         } else if (drawingMode === "erase") {
             const coords = getSvgTouchCoordinates(e)
             const clickedDrawing = drawings.find(drawing => {
@@ -277,6 +287,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
+                    color: currentDrawColor,
                     strokeWidth: 0.3,
                 })
             }
@@ -388,7 +399,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
                 {/* Current drawing preview */}
                 {isDrawing && drawingPoints.length >= 2 && (
-                    renderLine({ type: "arrow", points: drawingPoints, color: isHomeTeamActive ? homeTeam.color : awayTeam.color, strokeWidth: 0.3 }, -1)
+                    renderLine({ type: "arrow", points: drawingPoints, color: currentDrawColor, strokeWidth: 0.3 }, -1)
                 )}
 
                 {/* Players: show both home and away */}
