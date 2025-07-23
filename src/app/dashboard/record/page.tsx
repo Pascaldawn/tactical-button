@@ -62,7 +62,7 @@ export default function RecordPage() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <div className="p-2 min-w-[220px]">
-                                        <TeamConfigPanel onAnyChange={() => setOpenTeamsDropdown(false)} />
+                                        <TeamConfigPanel />
                                     </div>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -107,7 +107,7 @@ export default function RecordPage() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <div className="p-2 min-w-[220px]">
-                                            <TeamConfigPanel onAnyChange={() => setOpenTeamsDropdown(false)} />
+                                            <TeamConfigPanel />
                                         </div>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
