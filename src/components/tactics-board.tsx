@@ -30,9 +30,9 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
     useEffect(() => {
         function updateRadius() {
             if (window.innerWidth < 640) {
-                setPlayerRadius(2.2);
+                setPlayerRadius(2.6); // Slightly above original for mobile
             } else {
-                setPlayerRadius(1.7);
+                setPlayerRadius(1.8); // Slightly above original for desktop
             }
         }
         updateRadius();
@@ -80,7 +80,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
     }
 
     // Helper: minimum distance between points (in % of board width)
-    const MIN_DIST = 0.5
+    const MIN_DIST = 0.25; // Lowered for smoother drawing
     function shouldAddPoint(newPoint: { x: number; y: number }, lastPoint?: { x: number; y: number }) {
         if (!lastPoint) return true
         const dx = newPoint.x - lastPoint.x
@@ -234,45 +234,48 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
     // Touch event handlers
     const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
-        if (drawingMode === "move") {
-            // Handle player dragging
-            const touch = e.target as SVGElement
-            const playerGroup = touch.closest('g[data-player-id]')
-            if (playerGroup) {
-                const playerId = playerGroup.getAttribute('data-player-id')
+        // Prevent accidental tap on player when drawing/erasing
+        const touch = e.target as SVGElement;
+        const playerGroup = touch.closest('g[data-player-id]');
+        if (playerGroup) {
+            if (drawingMode === "move") {
+                const playerId = playerGroup.getAttribute('data-player-id');
                 if (playerId) {
-                    setDraggedPlayer(playerId)
+                    setDraggedPlayer(playerId);
                 }
             }
-        } else if (drawingMode === "draw") {
+            // Do not start drawing/erasing if tap is on a player
+            e.preventDefault();
+            return;
+        }
+        if (drawingMode === "draw") {
             const coords = getSvgTouchCoordinates(e);
-            // Determine color based on starting x
             const color = coords.x < 52.5 ? homeTeam.color : awayTeam.color;
             setCurrentDrawColor(color);
             setIsDrawing(true);
             drawingPointsRef.current = [coords];
             setDrawingPoints([coords]);
         } else if (drawingMode === "erase") {
-            const coords = getSvgTouchCoordinates(e)
+            const coords = getSvgTouchCoordinates(e);
             const clickedDrawing = drawings.find(drawing => {
                 if (drawing.type === "arrow" && drawing.points.length >= 2) {
                     for (let i = 0; i < drawing.points.length - 1; i++) {
-                        const p1 = drawing.points[i]
-                        const p2 = drawing.points[i + 1]
-                        const distance = distanceToLineSegment(coords, p1, p2)
+                        const p1 = drawing.points[i];
+                        const p2 = drawing.points[i + 1];
+                        const distance = distanceToLineSegment(coords, p1, p2);
                         if (distance < 3) {
-                            return true
+                            return true;
                         }
                     }
                 }
-                return false
-            })
+                return false;
+            });
             if (clickedDrawing) {
-                removeDrawing(clickedDrawing.id)
+                removeDrawing(clickedDrawing.id);
             }
         }
-        e.preventDefault()
-    }
+        e.preventDefault();
+    };
 
     const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
         if (drawingMode === "move" && draggedPlayer) {
@@ -432,6 +435,12 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                         transform={`translate(${player.x}, ${player.y})`}
                         className={drawingMode === "move" ? "cursor-move" : "cursor-default"}
                     >
+                        {/* Larger transparent hit area for touch */}
+                        <circle
+                            r={playerRadius * 1.3}
+                            fill="transparent"
+                            style={{ pointerEvents: 'all' }}
+                        />
                         <circle
                             r={playerRadius}
                             fill={player.team === "home" ? homeTeam.color : awayTeam.color}
@@ -441,8 +450,10 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                         />
                         <text
                             textAnchor="middle"
-                            dy="0.5"
-                            fontSize="1.1"
+                            dominantBaseline="middle"
+                            alignmentBaseline="middle"
+                            dy={0}
+                            fontSize={playerRadius * 1.0}
                             fill={
                                 (player.team === "home" && homeTeam.color === "#ffffff") ||
                                     (player.team === "away" && awayTeam.color === "#ffffff")
@@ -459,3 +470,4 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
         </div>
     )
 })
+
