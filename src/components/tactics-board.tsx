@@ -147,10 +147,14 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             const finalPoints = [...drawingPointsRef.current]
 
             if (finalPoints.length >= 2) {
+                // Determine color by direction: left-to-right = home, right-to-left = away
+                const start = finalPoints[0]
+                const end = finalPoints[finalPoints.length - 1]
+                const color = end.x > start.x ? homeTeam.color : awayTeam.color
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
-                    color: currentDrawColor,
+                    color,
                     strokeWidth: 0.3,
                 })
             }
@@ -284,10 +288,14 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
             }
             const finalPoints = [...drawingPointsRef.current]
             if (finalPoints.length >= 2) {
+                // Determine color by direction: left-to-right = home, right-to-left = away
+                const start = finalPoints[0]
+                const end = finalPoints[finalPoints.length - 1]
+                const color = end.x > start.x ? homeTeam.color : awayTeam.color
                 addDrawing({
                     type: "arrow",
                     points: finalPoints,
-                    color: currentDrawColor,
+                    color,
                     strokeWidth: 0.3,
                 })
             }
@@ -399,7 +407,12 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
                 {/* Current drawing preview */}
                 {isDrawing && drawingPoints.length >= 2 && (
-                    renderLine({ type: "arrow", points: drawingPoints, color: currentDrawColor, strokeWidth: 0.3 }, -1)
+                    (() => {
+                        const start = drawingPoints[0];
+                        const end = drawingPoints[drawingPoints.length - 1];
+                        const previewColor = end.x > start.x ? homeTeam.color : awayTeam.color;
+                        return renderLine({ type: "arrow", points: drawingPoints, color: previewColor, strokeWidth: 0.3 }, -1);
+                    })()
                 )}
 
                 {/* Players: show both home and away */}
