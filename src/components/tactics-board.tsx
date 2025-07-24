@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from "react"
+import { useEffect } from "react"
 
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 
@@ -25,6 +26,19 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
     // Add state to track current drawing color
     const [currentDrawColor, setCurrentDrawColor] = useState<string>(homeTeam.color);
+    const [playerRadius, setPlayerRadius] = useState(1.4);
+    useEffect(() => {
+        function updateRadius() {
+            if (window.innerWidth < 640) {
+                setPlayerRadius(2.2);
+            } else {
+                setPlayerRadius(1.7);
+            }
+        }
+        updateRadius();
+        window.addEventListener('resize', updateRadius);
+        return () => window.removeEventListener('resize', updateRadius);
+    }, []);
 
     const getSvgCoordinates = (e: React.MouseEvent<SVGSVGElement>) => {
         if (!svgRef.current) return { x: 0, y: 0 }
@@ -317,11 +331,6 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
 
     return (
         <div className="w-full min-w-0 min-h-[180px] sm:min-h-[260px] md:min-h-[340px] lg:min-h-[420px] xl:min-h-[520px] h-full flex items-center justify-center rounded-lg overflow-hidden relative" data-tactics-board style={{ touchAction: 'none' }}>
-            {drawingMode !== "move" && (
-                <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs z-10">
-                    {drawingMode === "draw" ? "Drawing Mode - Click and drag to draw arrows" : "Erase Mode - Click on arrows to remove"}
-                </div>
-            )}
             <svg
                 ref={svgRef}
                 viewBox="0 0 105 68"
@@ -424,7 +433,7 @@ export const TacticsBoard = React.memo(function TacticsBoard() {
                         className={drawingMode === "move" ? "cursor-move" : "cursor-default"}
                     >
                         <circle
-                            r="1.4"
+                            r={playerRadius}
                             fill={player.team === "home" ? homeTeam.color : awayTeam.color}
                             stroke="white"
                             strokeWidth="0.2"
