@@ -1,42 +1,69 @@
 "use client"
 
+import { useState } from "react"
 import { TacticsBoard } from "@/components/tactics-board"
 import { TeamConfigPanel } from "@/components/team-config-panel"
-import { FormationSelector } from "@/components/formation-selector"
 import { DrawingTools } from "@/components/drawing-tools"
-import { BoardActions } from "@/components/board-actions"
-import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Users } from "lucide-react"
 import { TacticsBoardProvider } from "@/hooks/use-tactics-board"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function AnalyzePage() {
+    const [showTeamsPanel, setShowTeamsPanel] = useState(false);
+    const isMobile = useIsMobile();
+
     return (
         <TacticsBoardProvider>
-            <div className="space-y-4 md:space-y-6 w-full max-w-none mx-auto relative min-h-screen flex flex-col">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold">Tactics Analyzer</h1>
-                        <p className="text-muted-foreground text-sm md:text-base">
-                            Create and analyze tactical formations and movements
-                        </p>
-                    </div>
-                </div>
-                {/* Control Panel */}
-                <div className="w-full flex flex-col md:flex-row gap-6">
-                    <div className="w-full md:max-w-xs lg:max-w-sm xl:max-w-[320px] space-y-4 md:order-1 flex-shrink-0">
-                        <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Drawing Tools</h3>
+            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+                {isMobile ? (
+                    // Mobile Layout
+                    <div className="flex flex-col w-full gap-4">
+                        {/* Tactics Board at the top */}
+                        <div className="w-full bg-[#22a745] rounded-lg p-2 flex items-center justify-center" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}>
+                            <TacticsBoard />
+                        </div>
+                        {/* Drawing Tools and Teams icon row below tactics board */}
+                        <div className="w-full flex justify-center mt-2 gap-2">
                             <DrawingTools />
-                        </Card>
-                        <Card className="p-3 md:p-4">
-                            <h3 className="font-semibold mb-3 text-sm md:text-base">Team Configuration</h3>
-                            <TeamConfigPanel />
-                        </Card>
+                            <Button variant="outline" size="icon" className="min-w-[40px] h-10 w-10 flex items-center justify-center" onClick={() => setShowTeamsPanel((v) => !v)} title="Teams">
+                                <Users className="w-5 h-5" />
+                            </Button>
+                        </div>
+                        {showTeamsPanel && (
+                            <div className="w-full flex justify-end mt-2">
+                                <div className="p-2 min-w-[220px] bg-background rounded-md shadow border max-h-[60vh] overflow-y-auto">
+                                    <TeamConfigPanel />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    {/* Tactics Board */}
-                    <div className="flex-1 md:order-2 min-h-[300px] h-full px-0 flex items-center justify-center">
-                        <TacticsBoard />
-                    </div>
-                </div>
+                ) : (
+                    // Desktop Layout
+                    <>
+                        <div className="flex flex-col items-center flex-1 min-w-0">
+                            <div className="w-full bg-[#22a745] rounded-lg p-2 flex items-center justify-center" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}>
+                                <TacticsBoard />
+                            </div>
+                            {/* Drawing Tools and Teams icon row below tactics board */}
+                            <div className="w-full flex justify-center mt-2 gap-2">
+                                <DrawingTools />
+                                <Button variant="outline" size="icon" className="min-w-[40px] h-10 w-10 flex items-center justify-center" onClick={() => setShowTeamsPanel((v) => !v)} title="Teams">
+                                    <Users className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center w-full max-w-xs gap-6">
+                            {showTeamsPanel && (
+                                <div className="w-full flex justify-center mt-2">
+                                    <div className="p-2 min-w-[220px] bg-background rounded-md shadow border max-h-[60vh] overflow-y-auto">
+                                        <TeamConfigPanel />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
         </TacticsBoardProvider>
     )
