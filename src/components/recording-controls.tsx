@@ -96,6 +96,7 @@ export function RecordingControls({
                         handleStopRecording()
                         toast.error("Recording stopped", {
                             description: "Maximum recording time reached.",
+                            duration: 1000,
                         })
                         return prev
                     }
@@ -144,7 +145,7 @@ export function RecordingControls({
             try {
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             } catch (err) {
-                toast.error("Microphone access denied", { description: "Recording will not include voice audio." });
+                toast.error("Microphone access denied", { description: "Recording will not include voice audio.", duration: 1000 });
                 audioStream = null;
             }
 
@@ -205,9 +206,9 @@ export function RecordingControls({
             };
             mediaRecorderRef.current.start();
             onRecordingChange(true);
-            toast.success("Recording started", { description: "Your tactics board, webcam, and audio are being recorded." });
+            toast.success("Recording started", { description: "Your tactics board, webcam, and audio are being recorded.", duration: 1000 });
         } catch (err) {
-            toast.error("Recording failed", { description: "Could not start recording. Please allow microphone and webcam access and try again." });
+            toast.error("Recording failed", { description: "Could not start recording. Please allow microphone and webcam access and try again.", duration: 1000 });
         }
     }
 
@@ -220,7 +221,7 @@ export function RecordingControls({
             mediaRecorderRef.current.stop();
         }
         onRecordingChange(false);
-        toast.success("Recording stopped", { description: "Your recording has been saved." });
+        toast.success("Recording stopped", { description: "Your recording has been saved.", duration: 1000 });
     }
 
     const handleDownload = () => {
@@ -240,6 +241,7 @@ export function RecordingControls({
         if (!user?.subscription?.active) {
             toast.error("Subscription required", {
                 description: "Please subscribe to export your recordings.",
+                duration: 1000,
             })
             router.push("/subscribe")
             return
@@ -248,6 +250,7 @@ export function RecordingControls({
         if (!recordedBlob) {
             toast.error("No recording available", {
                 description: "Please record a session first.",
+                duration: 1000,
             })
             return
         }
@@ -269,6 +272,7 @@ export function RecordingControls({
 
             toast(exportSteps[i], {
                 description: `Export progress: ${(i + 1) * 20}%`,
+                duration: 1000,
             })
         }
 
@@ -277,6 +281,7 @@ export function RecordingControls({
 
         toast.success("Export complete!", {
             description: "Your video is ready for download.",
+            duration: 1000,
         })
 
         setTimeout(() => setExportProgress(0), 3000)
