@@ -34,20 +34,21 @@ export default function RecordPage() {
 
     return (
         <TacticsBoardProvider>
-            {isRecording && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    width: '100vw',
-                    height: '100vh',
-                    border: '6px solid #e11d48',
-                    boxSizing: 'border-box',
-                    zIndex: 9999,
-                    pointerEvents: 'none',
-                }} />
-            )}
-            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+            <div data-record-page className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+                {isRecording && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        border: '6px solid #e11d48',
+                        boxSizing: 'border-box',
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                    }} />
+                )}
+                
                 {isMobile ? (
                     // Mobile Layout
                     <div className="flex flex-col w-full gap-4">
@@ -74,7 +75,7 @@ export default function RecordPage() {
                             </div>
                         )}
                         {/* Recording Controls */}
-                        <div className="w-full">
+                        <div className="w-full mt-2">
                             <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} />
                         </div>
                     </div>

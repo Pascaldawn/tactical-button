@@ -15,24 +15,16 @@ import { useAuth } from "@/store/auth-context"
 import { toast } from "sonner"
 import { Play, Square, Download, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
-import html2canvas from "html2canvas"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
-// Debounce utility
-function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number): (...args: Parameters<T>) => void {
-    let timer: ReturnType<typeof setTimeout>;
-    return (...args: Parameters<T>) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
-    };
-}
-// import FFmpeg from '@ffmpeg/ffmpeg';
-// const { createFFmpeg, fetchFile } = FFmpeg as any;
+import html2canvas from "html2canvas"
 
 interface RecordingControlsProps {
     isRecording: boolean
     onRecordingChange: (recording: boolean) => void
     webcamVideoRef: React.RefObject<HTMLVideoElement>
 }
+
+const maxRecordingTime = 600 // 10 minutes in seconds
 
 export function RecordingControls({
     isRecording,
@@ -43,30 +35,15 @@ export function RecordingControls({
     const [isExporting, setIsExporting] = useState(false)
     const [exportProgress, setExportProgress] = useState(0)
     const [recordingTime, setRecordingTime] = useState(0)
-    const [aspectRatio, setAspectRatio] = useState("16:9")
     const { user } = useAuth()
     const router = useRouter()
 
-    const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const recordedChunksRef = useRef<Blob[]>([])
+    const recordingActiveRef = useRef(false)
+    const recordingStartTimeRef = useRef<number>(0)
+    const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const animationFrameRef = useRef<number | null>(null)
-    const recordingActiveRef = useRef(false);
-
-    // Cache for tactics board image
-    const cachedTacticsImageRef = useRef<HTMLCanvasElement | null>(null);
-    // Debounced update function
-    const updateTacticsImage = useCallback(
-        debounce(() => {
-            const tacticsBoard = document.querySelector('[data-tactics-board]') as HTMLElement;
-            if (!tacticsBoard) return;
-            html2canvas(tacticsBoard, { backgroundColor: "#22a745", useCORS: true }).then(tacticsImage => {
-                cachedTacticsImageRef.current = tacticsImage;
-                console.log('[DEBUG] Tactics board image cache updated', Date.now());
-            });
-        }, 200),
-        []
-    );
 
     // Access board state for dependency tracking
     const {
@@ -79,169 +56,373 @@ export function RecordingControls({
         drawingMode,
     } = useTacticsBoardWithContext();
 
-    // Update tactics image cache whenever board state changes
-    useEffect(() => {
-        updateTacticsImage();
-    }, [players, drawings, homeTeam, awayTeam, homeFormation, awayFormation, drawingMode, updateTacticsImage]);
-
-    const maxRecordingTime = user?.subscription?.active ? 600 : 120 // 10 min or 2 min
-
-    useEffect(() => {
-        let interval: NodeJS.Timeout
-
-        if (isRecording) {
-            interval = setInterval(() => {
-                setRecordingTime((prev) => {
-                    if (prev >= maxRecordingTime) {
-                        handleStopRecording()
-                        toast.error("Recording stopped", {
-                            description: "Maximum recording time reached.",
-                            duration: 1000,
-                        })
-                        return prev
-                    }
-                    return prev + 1
-                })
-            }, 1000)
-        } else {
-            setRecordingTime(0)
-        }
-
-        return () => clearInterval(interval)
-    }, [isRecording, maxRecordingTime])
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60)
-        const secs = seconds % 60
-        return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    // Detect if device is mobile
+    const isMobile = () => {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+               window.innerWidth <= 768;
     }
 
-    // Screen/tab recording logic using getDisplayMedia
-    const startRecording = async () => {
-        setRecordedBlob(null);
-        recordedChunksRef.current = [];
+    // Recording timer effect
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isRecording && recordingActiveRef.current) {
+            interval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
+                setRecordingTime(elapsed);
+                
+                if (elapsed >= maxRecordingTime) {
+                    handleStopRecording();
+                    toast.info("Recording stopped", { description: "Maximum recording time reached.", duration: 2000 });
+                }
+            }, 1000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isRecording]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Mobile screen recording with camera overlay
+    const startMobileRecording = async () => {
         try {
-            // 1. Prepare off-screen canvas
-            const width = 1280;
-            const height = 853;
+            // 1. Get camera stream for overlay
+            const cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 320 },
+                    height: { ideal: 240 },
+                    frameRate: { ideal: 15 }
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 48000
+                }
+            });
+
+            // 2. Create canvas for compositing
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = 1280;
+            canvas.height = 720;
             canvasRef.current = canvas;
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Could not get canvas context');
 
-            // 2. Get SVG node for tactics board
-            const board = document.querySelector('[data-tactics-board]') as HTMLElement;
-            if (!board) throw new Error('Tactics board not found');
-            const svg = board.querySelector('svg');
-            if (!svg) throw new Error('SVG not found');
+            // 3. Create video element for camera stream
+            const cameraVideo = document.createElement('video');
+            cameraVideo.srcObject = cameraStream;
+            cameraVideo.muted = true;
+            cameraVideo.playsInline = true;
+            await cameraVideo.play();
 
-            // 3. Prepare webcam video
-            const webcamVideo = webcamVideoRef?.current;
-
-            // 4. Get microphone audio
-            let audioStream: MediaStream | null = null;
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch (err) {
-                toast.error("Microphone access denied", { description: "Recording will not include voice audio.", duration: 1000 });
-                audioStream = null;
+            // 4. Get the record page container
+            const recordPage = document.querySelector('[data-record-page]') as HTMLElement;
+            if (!recordPage) {
+                throw new Error('Record page not found');
             }
 
-            // 5. Animation loop: draw SVG and webcam to canvas
+            // 5. Frame capture and composition loop
             let running = true;
-            const drawFrame = () => {
+            const captureFrame = async () => {
                 if (!running) return;
-                // Draw tactics board SVG
-                const serializer = new XMLSerializer();
-                const svgString = serializer.serializeToString(svg);
-                const img = new window.Image();
-                const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-                const url = URL.createObjectURL(svgBlob);
-                img.onload = () => {
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.drawImage(img, 0, 0, width, height);
-                    URL.revokeObjectURL(url);
-                    // Draw webcam video (bottom right, 320x240)
-                    if (webcamVideo && webcamVideo.readyState >= 2) {
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.roundRect(width - 340, height - 260, 320, 240, 16);
-                        ctx.clip();
-                        ctx.drawImage(webcamVideo, width - 340, height - 260, 320, 240);
-                        ctx.restore();
-                    }
-                };
-                img.src = url;
-                animationFrameRef.current = requestAnimationFrame(drawFrame);
+
+                try {
+                    // Capture the record page
+                    const screenshot = await html2canvas(recordPage, {
+                        backgroundColor: null,
+                        scale: 1,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        width: recordPage.offsetWidth,
+                        height: recordPage.offsetHeight,
+                        scrollX: 0,
+                        scrollY: 0,
+                        windowWidth: window.innerWidth,
+                        windowHeight: window.innerHeight,
+                    });
+
+                    // Clear canvas
+                    ctx.clearRect(0, 0, 1280, 720);
+
+                    // Scale and center the screenshot
+                    const scaleX = 1280 / screenshot.width;
+                    const scaleY = 720 / screenshot.height;
+                    const scale = Math.min(scaleX, scaleY);
+                    
+                    const scaledWidth = screenshot.width * scale;
+                    const scaledHeight = screenshot.height * scale;
+                    const offsetX = (1280 - scaledWidth) / 2;
+                    const offsetY = (720 - scaledHeight) / 2;
+
+                    // Draw the record page screenshot
+                    ctx.drawImage(screenshot, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                    // Draw camera overlay in bottom-right corner
+                    const cameraWidth = 200;
+                    const cameraHeight = 150;
+                    const cameraX = 1280 - cameraWidth - 20;
+                    const cameraY = 720 - cameraHeight - 20;
+
+                    // Add rounded corner effect for camera
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.roundRect(cameraX, cameraY, cameraWidth, cameraHeight, 10);
+                    ctx.clip();
+                    ctx.drawImage(cameraVideo, cameraX, cameraY, cameraWidth, cameraHeight);
+                    ctx.restore();
+
+                    // Add border around camera
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(cameraX, cameraY, cameraWidth, cameraHeight);
+
+                } catch (error) {
+                    console.error('Frame capture error:', error);
+                }
+
+                // Continue at 10 FPS for mobile (better performance)
+                setTimeout(captureFrame, 1000 / 10);
             };
-            drawFrame();
+
+            captureFrame();
 
             // 6. Get canvas stream
-            const canvasStream = canvas.captureStream(30);
-            // 7. Combine with audio
-            const combinedStream = new MediaStream([
-                ...canvasStream.getVideoTracks(),
-                ...(audioStream ? audioStream.getAudioTracks() : [])
-            ]);
+            const canvasStream = canvas.captureStream(10);
 
-            // 8. Start MediaRecorder
-            mediaRecorderRef.current = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
+            // 7. Start MediaRecorder
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+                ? 'video/webm;codecs=vp9' 
+                : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                ? 'video/webm;codecs=vp8'
+                : 'video/webm';
+                
+            mediaRecorderRef.current = new MediaRecorder(canvasStream, { 
+                mimeType,
+                videoBitsPerSecond: 3000000, // 3 Mbps for mobile (better performance)
+            });
+
             recordedChunksRef.current = [];
+            
             mediaRecorderRef.current.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     recordedChunksRef.current.push(event.data);
                 }
             };
+
             mediaRecorderRef.current.onstop = () => {
                 running = false;
-                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+                recordingActiveRef.current = false;
+                
+                if (animationFrameRef.current) {
+                    cancelAnimationFrame(animationFrameRef.current);
+                }
+                
                 const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
                 setRecordedBlob(blob);
-                // Clean up all tracks
-                combinedStream.getTracks().forEach(track => track.stop());
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+                
+                // Clean up
+                cameraStream.getTracks().forEach(track => track.stop());
                 mediaRecorderRef.current = null;
             };
-            mediaRecorderRef.current.start();
+
+            mediaRecorderRef.current.start(1000);
             onRecordingChange(true);
-            toast.success("Recording started", { description: "Your tactics board, webcam, and audio are being recorded.", duration: 1000 });
+            
+            toast.success("Mobile screen recording started", { 
+                description: "Recording screen with camera overlay. Please wait for first frame...", 
+                duration: 3000 
+            });
+            
         } catch (err) {
-            toast.error("Recording failed", { description: "Could not start recording. Please allow microphone and webcam access and try again.", duration: 1000 });
+            console.error('Mobile recording error:', err);
+            recordingActiveRef.current = false;
+            
+            if (err instanceof Error && err.name === 'NotAllowedError') {
+                toast.error("Camera access denied", { 
+                    description: "Please allow camera and microphone access to record on mobile.", 
+                    duration: 4000 
+                });
+            } else {
+                toast.error("Mobile recording failed", { 
+                    description: "Please try again or use desktop for better quality.", 
+                    duration: 3000 
+                });
+            }
+        }
+    }
+
+    // Desktop recording using getDisplayMedia
+    const startDesktopRecording = async () => {
+        try {
+            // 1. Get screen capture with audio
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    displaySurface: 'browser',
+                    logicalSurface: true,
+                    cursor: 'never',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 30 }
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 48000
+                }
+            });
+
+            // 2. Get microphone audio separately for better quality
+            let microphoneStream: MediaStream | null = null;
+            try {
+                microphoneStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000
+                    } 
+                });
+            } catch (err) {
+                console.log('Microphone not available, using screen audio only');
+            }
+
+            // 3. Combine screen and microphone audio
+            const audioTracks = [
+                ...screenStream.getAudioTracks(),
+                ...(microphoneStream ? microphoneStream.getAudioTracks() : [])
+            ];
+
+            const combinedStream = new MediaStream([
+                ...screenStream.getVideoTracks(),
+                ...audioTracks
+            ]);
+
+            // 4. Start MediaRecorder with high quality settings
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+                ? 'video/webm;codecs=vp9' 
+                : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                ? 'video/webm;codecs=vp8'
+                : 'video/webm';
+                
+            mediaRecorderRef.current = new MediaRecorder(combinedStream, { 
+                mimeType,
+                videoBitsPerSecond: 8000000, // 8 Mbps for high quality
+            });
+
+            recordedChunksRef.current = [];
+            
+            mediaRecorderRef.current.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorderRef.current.onstop = () => {
+                recordingActiveRef.current = false;
+                
+                const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+                setRecordedBlob(blob);
+                
+                // Clean up all tracks
+                combinedStream.getTracks().forEach(track => track.stop());
+                if (microphoneStream) {
+                    microphoneStream.getTracks().forEach(track => track.stop());
+                }
+                
+                mediaRecorderRef.current = null;
+            };
+
+            mediaRecorderRef.current.start(1000); // 1-second chunks for better handling
+            onRecordingChange(true);
+            
+            toast.success("Desktop recording started", { 
+                description: "Select the record page tab/window to capture. Make sure to include the entire page.", 
+                duration: 3000 
+            });
+            
+        } catch (err) {
+            console.error('Desktop recording error:', err);
+            recordingActiveRef.current = false;
+            
+            if (err instanceof Error && err.name === 'NotAllowedError') {
+                toast.error("Permission denied", { 
+                    description: "Please allow screen sharing and microphone access to record.", 
+                    duration: 4000 
+                });
+            } else {
+                toast.error("Desktop recording failed", { 
+                    description: "Could not start recording. Please try again.", 
+                    duration: 3000 
+                });
+            }
+        }
+    }
+
+    // Main recording function that detects device type
+    const startRecording = async () => {
+        setRecordedBlob(null);
+        recordedChunksRef.current = [];
+        recordingActiveRef.current = true;
+        recordingStartTimeRef.current = Date.now();
+        
+        if (isMobile()) {
+            await startMobileRecording();
+        } else {
+            await startDesktopRecording();
         }
     }
 
     const handleStartRecording = () => {
-        startRecording()
+        startRecording();
     }
 
     const handleStopRecording = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        if (mediaRecorderRef.current && recordingActiveRef.current) {
             mediaRecorderRef.current.stop();
+            onRecordingChange(false);
+            toast.success("Recording stopped", { 
+                description: "Your video is ready for download.", 
+                duration: 2000 
+            });
         }
-        onRecordingChange(false);
-        toast.success("Recording stopped", { description: "Your recording has been saved.", duration: 1000 });
     }
 
     const handleDownload = () => {
-        if (recordedBlob) {
-            const url = URL.createObjectURL(recordedBlob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `tactical-session-${new Date().toISOString().slice(0, 19)}.webm`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
+        if (!recordedBlob) {
+            toast.error("No recording available", { 
+                description: "Please record a session first.", 
+                duration: 2000 
+            });
+            return;
         }
+
+        const url = URL.createObjectURL(recordedBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `tactics-recording-${Date.now()}.webm`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success("Download started", { 
+            description: "Your recording is being downloaded.", 
+            duration: 2000 
+        });
     }
 
     const handleExport = async () => {
         if (!user?.subscription?.active) {
             toast.error("Subscription required", {
                 description: "Please subscribe to export your recordings.",
-                duration: 1000,
+                duration: 2000,
             })
             router.push("/subscribe")
             return
@@ -250,7 +431,7 @@ export function RecordingControls({
         if (!recordedBlob) {
             toast.error("No recording available", {
                 description: "Please record a session first.",
-                duration: 1000,
+                duration: 2000,
             })
             return
         }
@@ -281,7 +462,7 @@ export function RecordingControls({
 
         toast.success("Export complete!", {
             description: "Your video is ready for download.",
-            duration: 1000,
+            duration: 2000,
         })
 
         setTimeout(() => setExportProgress(0), 3000)
