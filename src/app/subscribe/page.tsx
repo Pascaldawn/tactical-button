@@ -23,7 +23,6 @@ export default function SubscribePage() {
             price: "$4.99",
             period: "month",
             description: "Perfect for individual coaches and creators",
-            productId: "80563e0c-7957-4a0e-8287-fb6c03621ff6",
             features: [
                 "Unlimited tactical boards",
                 "All formations and tactics",
@@ -40,7 +39,6 @@ export default function SubscribePage() {
             price: "$59.99",
             period: "month",
             description: "For professional teams and organizations",
-            productId: "59a5060f-8bb3-4a43-ad13-6d0f8ccd6ea1",
             features: [
                 "Everything in Basic",
                 "Unlimited recording time",
@@ -63,58 +61,35 @@ export default function SubscribePage() {
             return
         }
 
-        const selectedPlanData = plans.find(plan => plan.id === selectedPlan)
-        if (!selectedPlanData) {
-            toast.error("Please select a plan")
+        // Check if token exists
+        const token = localStorage.getItem("token")
+        if (!token) {
+            toast.error("Authentication token missing. Please log in again.")
             return
         }
 
         setIsLoading(true)
 
         try {
+            console.log("Creating checkout for plan:", selectedPlan)
+            console.log("User:", user)
+            
             // Create checkout URL with Polar.sh
             const response = await api.post("/create-checkout", {
-                products: selectedPlanData.productId
-            }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
+                plan: selectedPlan
             })
 
-            if (response.data.checkout_url) {
+            if (response.data.checkoutUrl) {
                 // Redirect to Polar.sh checkout
-                window.location.href = response.data.checkout_url
+                window.location.href = response.data.checkoutUrl
             } else {
-                throw new Error("Failed to create checkout URL")
+                toast.error("Failed to create checkout session")
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Subscription error:", error)
-            
-            // Show more specific error messages
-            if (error.response?.status === 500) {
-                const errorData = error.response.data
-                if (errorData?.details?.includes('POLAR_ACCESS_TOKEN')) {
-                    toast.error("Payment service not configured", {
-                        description: "Please contact support. The payment system is not properly configured.",
-                    })
-                } else {
-                    toast.error("Payment service error", {
-                        description: errorData?.details || "Please try again or contact support.",
-                    })
-                }
-            } else if (error.response?.status === 401) {
-                toast.error("Authentication required", {
-                    description: "Please log in again to continue.",
-                })
-            } else if (error.response?.status === 400) {
-                toast.error("Invalid request", {
-                    description: error.response.data?.error || "Please check your selection and try again.",
-                })
-            } else {
-                toast.error("Failed to start subscription", {
-                    description: error.response?.data?.error || "Please try again or contact support.",
-                })
-            }
+            toast.error("Failed to start subscription process", {
+                description: error.response?.data?.error || "Please try again or contact support.",
+            })
         } finally {
             setIsLoading(false)
         }
@@ -130,11 +105,7 @@ export default function SubscribePage() {
 
         try {
             // Create customer portal URL with Polar.sh
-            const response = await api.post("/create-portal", {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            })
+            const response = await api.post("/create-portal", {})
 
             if (response.data.portal_url) {
                 // Redirect to Polar.sh customer portal
