@@ -8,50 +8,41 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/store/auth-context"
 import { toast } from "sonner"
-import { Check, Crown, Zap, CreditCard } from "lucide-react"
+import { Check, Crown, Zap, CreditCard, ExternalLink, Star } from "lucide-react"
+import api from "@/lib/axios"
 
 export default function SubscribePage() {
-    const [selectedPlan, setSelectedPlan] = useState("pro")
-    const [selectedProvider, setSelectedProvider] = useState("stripe")
+    const [selectedPlan, setSelectedPlan] = useState("basic")
     const [isLoading, setIsLoading] = useState(false)
-    const { user, updateSubscription } = useAuth()
+    const { user, refreshUser } = useAuth()
 
     const plans = [
         {
-            id: "free",
-            name: "Free",
-            price: "$0",
-            period: "forever",
-            description: "Perfect for getting started",
-            features: ["3 tactical boards per month", "Basic formations", "Standard export quality", "Community support"],
-            limitations: ["Watermarked exports", "Limited recording time (2 min)", "No webcam overlay"],
-        },
-        {
-            id: "pro",
-            name: "Pro",
-            price: "$19",
+            id: "basic",
+            name: "Basic",
+            price: "$4.99",
             period: "month",
-            description: "For serious coaches and creators",
+            description: "Perfect for individual coaches and creators",
+            productId: "80563e0c-7957-4a0e-8287-fb6c03621ff6",
             features: [
                 "Unlimited tactical boards",
                 "All formations and tactics",
                 "HD export quality",
                 "Webcam overlay recording",
-                "Up to 10 min recordings",
-                "Priority support",
+                "Up to 5 min recordings",
+                "Email support",
                 "Advanced drawing tools",
-                "Team branding options",
             ],
-            popular: true,
         },
         {
-            id: "team",
-            name: "Team",
-            price: "$49",
+            id: "pro",
+            name: "Pro",
+            price: "$59.99",
             period: "month",
-            description: "For teams and organizations",
+            description: "For professional teams and organizations",
+            productId: "59a5060f-8bb3-4a43-ad13-6d0f8ccd6ea1",
             features: [
-                "Everything in Pro",
+                "Everything in Basic",
                 "Unlimited recording time",
                 "4K export quality",
                 "Team collaboration",
@@ -59,24 +50,102 @@ export default function SubscribePage() {
                 "API access",
                 "Dedicated support",
                 "Analytics dashboard",
+                "Priority feature requests",
+                "White-label options",
             ],
+            popular: true,
         },
     ]
 
     const handleSubscribe = async () => {
+        if (!user) {
+            toast.error("Please log in to subscribe")
+            return
+        }
+
+        const selectedPlanData = plans.find(plan => plan.id === selectedPlan)
+        if (!selectedPlanData) {
+            toast.error("Please select a plan")
+            return
+        }
+
         setIsLoading(true)
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-
-            await updateSubscription(selectedPlan, selectedProvider)
-
-            toast.success("Subscription successful!", {
-                description: `You're now subscribed to the ${plans.find((p) => p.id === selectedPlan)?.name} plan.`,
+            // Create checkout URL with Polar.sh
+            const response = await api.post("/create-checkout", {
+                products: selectedPlanData.productId
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
             })
-        } catch (error) {
-            toast.error("Subscription failed", {
-                description: "Please try again or contact support.",
+
+            if (response.data.checkout_url) {
+                // Redirect to Polar.sh checkout
+                window.location.href = response.data.checkout_url
+            } else {
+                throw new Error("Failed to create checkout URL")
+            }
+        } catch (error: any) {
+            console.error("Subscription error:", error)
+            
+            // Show more specific error messages
+            if (error.response?.status === 500) {
+                const errorData = error.response.data
+                if (errorData?.details?.includes('POLAR_ACCESS_TOKEN')) {
+                    toast.error("Payment service not configured", {
+                        description: "Please contact support. The payment system is not properly configured.",
+                    })
+                } else {
+                    toast.error("Payment service error", {
+                        description: errorData?.details || "Please try again or contact support.",
+                    })
+                }
+            } else if (error.response?.status === 401) {
+                toast.error("Authentication required", {
+                    description: "Please log in again to continue.",
+                })
+            } else if (error.response?.status === 400) {
+                toast.error("Invalid request", {
+                    description: error.response.data?.error || "Please check your selection and try again.",
+                })
+            } else {
+                toast.error("Failed to start subscription", {
+                    description: error.response?.data?.error || "Please try again or contact support.",
+                })
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleManageSubscription = async () => {
+        if (!user) {
+            toast.error("Please log in to manage subscription")
+            return
+        }
+
+        setIsLoading(true)
+
+        try {
+            // Create customer portal URL with Polar.sh
+            const response = await api.post("/create-portal", {}, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            })
+
+            if (response.data.portal_url) {
+                // Redirect to Polar.sh customer portal
+                window.location.href = response.data.portal_url
+            } else {
+                throw new Error("Failed to create portal URL")
+            }
+        } catch (error: any) {
+            console.error("Portal error:", error)
+            toast.error("Failed to open customer portal", {
+                description: error.response?.data?.error || "Please try again or contact support.",
             })
         } finally {
             setIsLoading(false)
@@ -94,7 +163,7 @@ export default function SubscribePage() {
                 </div>
 
                 {/* Plans */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-8 md:mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-8 md:mb-12">
                     {plans.map((plan) => (
                         <Card
                             key={plan.id}
@@ -122,6 +191,10 @@ export default function SubscribePage() {
                                     <span className="text-muted-foreground">/{plan.period}</span>
                                 </div>
                                 <CardDescription>{plan.description}</CardDescription>
+                                <div className="flex items-center space-x-2">
+                                    <CreditCard className="w-4 h-4 text-primary" />
+                                    <span className="text-sm text-muted-foreground">Polar.sh</span>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 <ul className="space-y-2 md:space-y-3">
@@ -131,61 +204,39 @@ export default function SubscribePage() {
                                             <span className="text-sm">{feature}</span>
                                         </li>
                                     ))}
-                                    {plan.limitations?.map((limitation, index) => (
-                                        <li key={index} className="flex items-center space-x-2 text-muted-foreground">
-                                            <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                                                <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                            </div>
-                                            <span className="text-sm">{limitation}</span>
-                                        </li>
-                                    ))}
                                 </ul>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
-                {/* Payment Provider Selection */}
-                {selectedPlan !== "free" && (
-                    <Card className="max-w-md mx-auto mb-6 md:mb-8">
-                        <CardHeader>
-                            <CardTitle className="flex items-center space-x-2">
-                                <CreditCard className="w-5 h-5" />
-                                <span>Payment Method</span>
-                            </CardTitle>
-                            <CardDescription>Choose your preferred payment provider</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <RadioGroup value={selectedProvider} onValueChange={setSelectedProvider}>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="stripe" id="stripe" />
-                                    <Label htmlFor="stripe" className="flex items-center space-x-2 cursor-pointer">
-                                        <div className="w-8 h-5 bg-blue-600 rounded flex items-center justify-center">
-                                            <span className="text-white text-xs font-bold">S</span>
-                                        </div>
-                                        <span>Stripe</span>
-                                    </Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="paystack" id="paystack" />
-                                    <Label htmlFor="paystack" className="flex items-center space-x-2 cursor-pointer">
-                                        <div className="w-8 h-5 bg-green-600 rounded flex items-center justify-center">
-                                            <span className="text-white text-xs font-bold">P</span>
-                                        </div>
-                                        <span>Paystack</span>
-                                    </Label>
-                                </div>
-                            </RadioGroup>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Subscribe Button */}
-                <div className="text-center">
-                    {selectedPlan === "free" ? (
-                        <Button size="lg" variant="outline" disabled>
-                            Current Plan
-                        </Button>
+                {/* Action Buttons */}
+                <div className="text-center space-y-4">
+                    {user?.subscriptionStatus === 'active' ? (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-center space-x-2 text-green-600">
+                                <Check className="w-5 h-5" />
+                                <span className="font-medium">You have an active subscription!</span>
+                            </div>
+                            <Button 
+                                size="lg" 
+                                variant="outline" 
+                                onClick={handleManageSubscription} 
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ExternalLink className="w-4 h-4 mr-2" />
+                                        Manage Subscription
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     ) : (
                         <Button size="lg" onClick={handleSubscribe} disabled={isLoading}>
                             {isLoading ? (
@@ -196,7 +247,7 @@ export default function SubscribePage() {
                             ) : (
                                 <>
                                     <Zap className="w-4 h-4 mr-2" />
-                                    Subscribe to {plans.find((p) => p.id === selectedPlan)?.name}
+                                    Subscribe to {plans.find(p => p.id === selectedPlan)?.name}
                                 </>
                             )}
                         </Button>
@@ -204,7 +255,7 @@ export default function SubscribePage() {
                 </div>
 
                 {/* Current Subscription Status */}
-                {user?.subscription && (
+                {user?.subscriptionStatus && (
                     <Card className="max-w-md mx-auto mt-6 md:mt-8">
                         <CardHeader>
                             <CardTitle>Current Subscription</CardTitle>
@@ -212,14 +263,76 @@ export default function SubscribePage() {
                         <CardContent>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-medium">{user.subscription.plan} Plan</p>
-                                    <p className="text-sm text-muted-foreground">via {user.subscription.provider}</p>
+                                    <p className="font-medium">
+                                        {user.subscriptionStatus === 'active' ? 'Active' : 'Free'} Plan
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        via Polar.sh
+                                    </p>
                                 </div>
-                                <Badge variant="secondary">Active</Badge>
+                                <Badge 
+                                    variant={user.subscriptionStatus === 'active' ? 'default' : 'secondary'}
+                                >
+                                    {user.subscriptionStatus === 'active' ? 'Active' : 'Inactive'}
+                                </Badge>
                             </div>
                         </CardContent>
                     </Card>
                 )}
+
+                {/* Plan Comparison */}
+                <div className="mt-8 md:mt-12">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-center">Plan Comparison</CardTitle>
+                            <CardDescription className="text-center">
+                                Choose the plan that best fits your needs
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="font-medium">Feature</div>
+                                <div className="font-medium text-center">Basic</div>
+                                <div className="font-medium text-center">Pro</div>
+                                
+                                <div>Price</div>
+                                <div className="text-center">$4.99/month</div>
+                                <div className="text-center">$59.99/month</div>
+                                
+                                <div>Recording Time</div>
+                                <div className="text-center">Up to 5 min</div>
+                                <div className="text-center">Unlimited</div>
+                                
+                                <div>Export Quality</div>
+                                <div className="text-center">HD</div>
+                                <div className="text-center">4K</div>
+                                
+                                <div>Support</div>
+                                <div className="text-center">Email</div>
+                                <div className="text-center">Dedicated</div>
+                                
+                                <div>Team Features</div>
+                                <div className="text-center">❌</div>
+                                <div className="text-center">✅</div>
+                                
+                                <div>API Access</div>
+                                <div className="text-center">❌</div>
+                                <div className="text-center">✅</div>
+                                
+                                <div>Analytics</div>
+                                <div className="text-center">❌</div>
+                                <div className="text-center">✅</div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Security Notice */}
+                <div className="text-center mt-8">
+                    <p className="text-sm text-muted-foreground">
+                        🔒 Secure payment processing by Polar.sh
+                    </p>
+                </div>
             </div>
         </div>
     )

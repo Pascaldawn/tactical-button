@@ -5,13 +5,12 @@ import api from "@/lib/axios"
 
 interface User {
     id: string
-    name: string
+    fullName: string
     email: string
-    subscription?: {
-        plan: string
-        provider: string
-        active: boolean
-    }
+    subscriptionStatus?: "active" | "inactive" | "cancelled" | "expired"
+    subscriptionId?: string
+    subscriptionPlan?: "basic" | "pro"
+    subscriptionProductId?: string
 }
 
 interface AuthContextType {
@@ -20,7 +19,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<boolean>
     register: (name: string, email: string, password: string) => Promise<boolean>
     logout: () => void
-    updateSubscription: (plan: string, provider: string) => Promise<void>
+    refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -28,6 +27,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+
+    const refreshUser = async () => {
+        try {
+            const token = localStorage.getItem("token")
+            if (token) {
+                const response = await api.get("/auth/me", {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+                if (response.data.user) {
+                    setUser(response.data.user)
+                    localStorage.setItem("user", JSON.stringify(response.data.user))
+                }
+            }
+        } catch (error) {
+            console.error("Failed to refresh user:", error)
+            // If token is invalid, logout
+            logout()
+        }
+    }
 
     useEffect(() => {
         // Check for existing session
@@ -37,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token && userData) {
             try {
                 setUser(JSON.parse(userData))
+                // Refresh user data from server to get latest subscription status
+                refreshUser()
             } catch (error) {
                 localStorage.removeItem("token")
                 localStorage.removeItem("user")
@@ -59,11 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return true
             }
             else {
-                throw new Error("Registration failed")
+                throw new Error("Login failed")
             }
         } catch (error: unknown) {
-            console.error("Registration error:", error)
-            throw new Error((error as any)?.response?.data?.message || "Registration failed")
+            console.error("Login error:", error)
+            throw new Error((error as any)?.response?.data?.message || "Login failed")
         }
     }
 
@@ -94,22 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
     }
 
-    const updateSubscription = async (plan: string, provider: string): Promise<void> => {
-        if (user) {
-            const updatedUser = {
-                ...user,
-                subscription: {
-                    plan,
-                    provider,
-                    active: true,
-                },
-            }
-
-            localStorage.setItem("tactical_button_user", JSON.stringify(updatedUser))
-            setUser(updatedUser)
-        }
-    }
-
     return (
         <AuthContext.Provider
             value={{
@@ -118,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 register,
                 logout,
-                updateSubscription,
+                refreshUser,
             }}
         >
             {children}
