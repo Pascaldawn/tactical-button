@@ -32,7 +32,7 @@ export default function DashboardPage() {
             {/* Welcome Section */}
             <div className="flex flex-col space-y-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user?.name}!</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user?.fullName}!</h1>
                     <p className="text-muted-foreground text-sm md:text-base">Ready to create some amazing tactical content?</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 md:gap-4">
