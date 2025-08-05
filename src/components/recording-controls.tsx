@@ -263,9 +263,6 @@ export function RecordingControls({
             // 1. Get screen capture with audio
             const screenStream = await navigator.mediaDevices.getDisplayMedia({
                 video: {
-                    displaySurface: 'browser',
-                    logicalSurface: true,
-                    cursor: 'never',
                     width: { ideal: 1920 },
                     height: { ideal: 1080 },
                     frameRate: { ideal: 30 }
@@ -419,7 +416,7 @@ export function RecordingControls({
     }
 
     const handleExport = async () => {
-        if (!user?.subscription?.active) {
+        if (user?.subscriptionStatus !== 'active') {
             toast.error("Subscription required", {
                 description: "Please subscribe to export your recordings.",
                 duration: 2000,

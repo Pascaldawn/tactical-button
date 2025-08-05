@@ -91,11 +91,11 @@ export function DashboardSidebar() {
                     <SidebarMenuItem>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <SidebarMenuButton tooltip={user?.name}>
+                                <SidebarMenuButton tooltip={user?.fullName}>
                                     <Avatar className="h-6 w-6">
-                                        <AvatarFallback className="text-xs">{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+                                        <AvatarFallback className="text-xs">{user?.fullName?.charAt(0).toUpperCase()}</AvatarFallback>
                                     </Avatar>
-                                    <span className="truncate">{user?.name}</span>
+                                    <span className="truncate">{user?.fullName}</span>
                                     <ChevronUp className="ml-auto" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { useAuth } from "@/store/auth-context"
 import { toast } from "sonner"
 import { Check, ArrowRight, Home, Crown } from "lucide-react"
 
-export default function SubscribeSuccessPage() {
+function SubscribeSuccessContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const { refreshUser, user } = useAuth()
@@ -174,5 +174,24 @@ export default function SubscribeSuccessPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+function LoadingFallback() {
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 flex items-center justify-center">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-lg">Loading...</p>
+            </div>
+        </div>
+    )
+}
+
+export default function SubscribeSuccessPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <SubscribeSuccessContent />
+        </Suspense>
     )
 } 
