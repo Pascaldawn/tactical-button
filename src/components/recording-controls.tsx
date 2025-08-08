@@ -17,6 +17,7 @@ import { Play, Square, Download, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useTacticsBoardWithContext } from "@/hooks/use-tactics-board"
 import html2canvas from "html2canvas"
+import { saveRecordingBlob, loadRecordingBlob, deleteRecordingBlob } from "@/lib/utils";
 
 interface RecordingControlsProps {
     isRecording: boolean
@@ -24,7 +25,8 @@ interface RecordingControlsProps {
     webcamVideoRef: React.RefObject<HTMLVideoElement>
 }
 
-const maxRecordingTime = 600 // 10 minutes in seconds
+const maxRecordingTime = 180 // 3 minutes in seconds
+const RECORDING_KEY = "latest-recording";
 
 export function RecordingControls({
     isRecording,
@@ -80,6 +82,13 @@ export function RecordingControls({
             if (interval) clearInterval(interval);
         };
     }, [isRecording]);
+
+    useEffect(() => {
+        // On mount, try to restore recording from IndexedDB
+        loadRecordingBlob(RECORDING_KEY).then(blob => {
+            if (blob) setRecordedBlob(blob);
+        });
+    }, []);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -391,7 +400,22 @@ export function RecordingControls({
         }
     }
 
+    useEffect(() => {
+        // Save to IndexedDB when a new recording is available
+        if (recordedBlob) {
+            saveRecordingBlob(RECORDING_KEY, recordedBlob);
+        }
+    }, [recordedBlob]);
+
     const handleDownload = () => {
+        if (user?.subscriptionStatus !== 'active') {
+            toast.error("Subscription required", {
+                description: "Please subscribe to download your recordings.",
+                duration: 2000,
+            })
+            router.push("/subscribe")
+            return
+        }
         if (!recordedBlob) {
             toast.error("No recording available", { 
                 description: "Please record a session first.", 
@@ -399,7 +423,6 @@ export function RecordingControls({
             });
             return;
         }
-
         const url = URL.createObjectURL(recordedBlob);
         const link = document.createElement('a');
         link.href = url;
@@ -408,61 +431,12 @@ export function RecordingControls({
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-
         toast.success("Download started", { 
             description: "Your recording is being downloaded.", 
             duration: 2000 
         });
-    }
-
-    const handleExport = async () => {
-        if (user?.subscriptionStatus !== 'active') {
-            toast.error("Subscription required", {
-                description: "Please subscribe to export your recordings.",
-                duration: 2000,
-            })
-            router.push("/subscribe")
-            return
-        }
-
-        if (!recordedBlob) {
-            toast.error("No recording available", {
-                description: "Please record a session first.",
-                duration: 2000,
-            })
-            return
-        }
-
-        setIsExporting(true)
-        setExportProgress(0)
-
-        const exportSteps = [
-            "Preparing video...",
-            "Processing audio...",
-            "Rendering effects...",
-            "Encoding video...",
-            "Finalizing export...",
-        ]
-
-        for (let i = 0; i < exportSteps.length; i++) {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setExportProgress((i + 1) * 20)
-
-            toast(exportSteps[i], {
-                description: `Export progress: ${(i + 1) * 20}%`,
-                duration: 1000,
-            })
-        }
-
-        setIsExporting(false)
-        setExportProgress(100)
-
-        toast.success("Export complete!", {
-            description: "Your video is ready for download.",
-            duration: 2000,
-        })
-
-        setTimeout(() => setExportProgress(0), 3000)
+        setRecordedBlob(null); // Only clear after successful download
+        deleteRecordingBlob(RECORDING_KEY); // Remove from IndexedDB
     }
 
     return (
@@ -474,49 +448,28 @@ export function RecordingControls({
                     {formatTime(recordingTime)} / {formatTime(maxRecordingTime)}
                 </span>
             </div>
-
             {/* Recording Progress */}
             <Progress value={(recordingTime / maxRecordingTime) * 100} className="h-2" />
-
             {/* Recording Controls */}
             <div className="space-y-2">
-                {!isRecording ? (
+                {!isRecording && !recordedBlob && (
                     <Button onClick={handleStartRecording} className="w-full">
                         <Play className="w-4 h-4 mr-2" />
                         Start Recording
                     </Button>
-                ) : (
+                )}
+                {isRecording && (
                     <Button onClick={handleStopRecording} variant="destructive" className="w-full">
                         <Square className="w-4 h-4 mr-2" />
                         Stop Recording
                     </Button>
                 )}
-
                 {recordedBlob && !isRecording && (
                     <div className="space-y-2">
                         <Button onClick={handleDownload} variant="outline" className="w-full bg-transparent">
                             <Download className="w-4 h-4 mr-2" />
                             Download Recording
                         </Button>
-
-                        {isExporting ? (
-                            <div className="space-y-2">
-                                <Progress value={exportProgress} className="h-2" />
-                                <p className="text-sm text-center text-muted-foreground">
-                                    Exporting... {exportProgress}%
-                                </p>
-                            </div>
-                        ) : exportProgress === 100 ? (
-                            <Button variant="outline" className="w-full bg-transparent">
-                                <Download className="w-4 h-4 mr-2" />
-                                Download Video
-                            </Button>
-                        ) : (
-                            <Button onClick={handleExport} variant="outline" className="w-full bg-transparent">
-                                <Download className="w-4 h-4 mr-2" />
-                                Export Video
-                            </Button>
-                        )}
                     </div>
                 )}
             </div>

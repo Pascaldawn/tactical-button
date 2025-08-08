@@ -251,53 +251,6 @@ export default function SubscribePage() {
                     </Card>
                 )}
 
-                {/* Plan Comparison */}
-                <div className="mt-8 md:mt-12">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-center">Plan Comparison</CardTitle>
-                            <CardDescription className="text-center">
-                                Choose the plan that best fits your needs
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                <div className="font-medium">Feature</div>
-                                <div className="font-medium text-center">Basic</div>
-                                <div className="font-medium text-center">Pro</div>
-                                
-                                <div>Price</div>
-                                <div className="text-center">$4.99/month</div>
-                                <div className="text-center">$59.99/month</div>
-                                
-                                <div>Recording Time</div>
-                                <div className="text-center">Up to 5 min</div>
-                                <div className="text-center">Unlimited</div>
-                                
-                                <div>Export Quality</div>
-                                <div className="text-center">HD</div>
-                                <div className="text-center">4K</div>
-                                
-                                <div>Support</div>
-                                <div className="text-center">Email</div>
-                                <div className="text-center">Dedicated</div>
-                                
-                                <div>Team Features</div>
-                                <div className="text-center">❌</div>
-                                <div className="text-center">✅</div>
-                                
-                                <div>API Access</div>
-                                <div className="text-center">❌</div>
-                                <div className="text-center">✅</div>
-                                
-                                <div>Analytics</div>
-                                <div className="text-center">❌</div>
-                                <div className="text-center">✅</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 {/* Security Notice */}
                 <div className="text-center mt-8">
                     <p className="text-sm text-muted-foreground">
