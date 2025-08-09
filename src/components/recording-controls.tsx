@@ -23,6 +23,7 @@ interface RecordingControlsProps {
     isRecording: boolean
     onRecordingChange: (recording: boolean) => void
     webcamVideoRef: React.RefObject<HTMLVideoElement>
+    webcamStream?: MediaStream | null
 }
 
 const maxRecordingTime = 180 // 3 minutes in seconds
@@ -32,6 +33,7 @@ export function RecordingControls({
     isRecording,
     onRecordingChange,
     webcamVideoRef,
+    webcamStream,
 }: RecordingControlsProps) {
     const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
     const [isExporting, setIsExporting] = useState(false)
@@ -98,31 +100,45 @@ export function RecordingControls({
 
     // Mobile screen recording with camera overlay
     const startMobileRecording = async () => {
-        try {
-            // 1. Get camera stream for overlay
-            const cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 320 },
-                    height: { ideal: 240 },
-                    frameRate: { ideal: 15 }
-                },
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true,
-                    sampleRate: 48000
-                }
+        // Check for support before proceeding
+        const canvasSupport = HTMLCanvasElement.prototype.captureStream !== undefined;
+        const mediaRecorderSupport = typeof window.MediaRecorder !== 'undefined';
+        if (!canvasSupport || !mediaRecorderSupport) {
+            toast.error("Mobile screen recording not supported", {
+                description: "Your browser does not support screen recording on mobile. Please use a desktop browser.",
+                duration: 5000
             });
+            return;
+        }
+        if (!webcamStream) {
+            toast.error("Camera not ready", {
+                description: "Please allow camera access before recording.",
+                duration: 4000
+            });
+            return;
+        }
+        try {
+            // 1. Use the provided webcamStream for overlay
+            const cameraStream = webcamStream;
+            // 1a. Assign camera stream to the overlay videoRef if available
+            if (webcamVideoRef && webcamVideoRef.current) {
+                webcamVideoRef.current.srcObject = cameraStream;
+                webcamVideoRef.current.muted = true;
+                webcamVideoRef.current.playsInline = true;
+                await webcamVideoRef.current.play();
+            }
 
             // 2. Create canvas for compositing
+            const isMobileDevice = isMobile();
             const canvas = document.createElement('canvas');
-            canvas.width = 1280;
-            canvas.height = 720;
+            // Lower resolution for mobile
+            canvas.width = isMobileDevice ? 640 : 1280;
+            canvas.height = isMobileDevice ? 360 : 720;
             canvasRef.current = canvas;
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Could not get canvas context');
 
-            // 3. Create video element for camera stream
+            // 3. Create video element for camera stream (for compositing)
             const cameraVideo = document.createElement('video');
             cameraVideo.srcObject = cameraStream;
             cameraVideo.muted = true;
@@ -137,9 +153,9 @@ export function RecordingControls({
 
             // 5. Frame capture and composition loop
             let running = true;
+            const targetFps = isMobileDevice ? 5 : 10;
             const captureFrame = async () => {
                 if (!running) return;
-
                 try {
                     // Capture the record page
                     const screenshot = await html2canvas(recordPage, {
@@ -194,15 +210,12 @@ export function RecordingControls({
                 } catch (error) {
                     console.error('Frame capture error:', error);
                 }
-
-                // Continue at 10 FPS for mobile (better performance)
-                setTimeout(captureFrame, 1000 / 10);
+                setTimeout(captureFrame, 1000 / targetFps);
             };
-
             captureFrame();
 
             // 6. Get canvas stream
-            const canvasStream = canvas.captureStream(10);
+            const canvasStream = canvas.captureStream(targetFps);
 
             // 7. Start MediaRecorder
             const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
@@ -210,48 +223,37 @@ export function RecordingControls({
                 : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
                 ? 'video/webm;codecs=vp8'
                 : 'video/webm';
-                
             mediaRecorderRef.current = new MediaRecorder(canvasStream, { 
                 mimeType,
-                videoBitsPerSecond: 3000000, // 3 Mbps for mobile (better performance)
+                videoBitsPerSecond: isMobileDevice ? 1500000 : 3000000, // Lower bitrate for mobile
             });
-
             recordedChunksRef.current = [];
-            
             mediaRecorderRef.current.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     recordedChunksRef.current.push(event.data);
                 }
             };
-
             mediaRecorderRef.current.onstop = () => {
                 running = false;
                 recordingActiveRef.current = false;
-                
                 if (animationFrameRef.current) {
                     cancelAnimationFrame(animationFrameRef.current);
                 }
-                
                 const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
                 setRecordedBlob(blob);
-                
                 // Clean up
                 cameraStream.getTracks().forEach(track => track.stop());
                 mediaRecorderRef.current = null;
             };
-
             mediaRecorderRef.current.start(1000);
             onRecordingChange(true);
-            
             toast.success("Mobile screen recording started", { 
                 description: "Recording screen with camera overlay. Please wait for first frame...", 
                 duration: 3000 
             });
-            
         } catch (err) {
             console.error('Mobile recording error:', err);
             recordingActiveRef.current = false;
-            
             if (err instanceof Error && err.name === 'NotAllowedError') {
                 toast.error("Camera access denied", { 
                     description: "Please allow camera and microphone access to record on mobile.", 
@@ -453,7 +455,7 @@ export function RecordingControls({
             {/* Recording Controls */}
             <div className="space-y-2">
                 {!isRecording && !recordedBlob && (
-                    <Button onClick={handleStartRecording} className="w-full">
+                    <Button onClick={handleStartRecording} className="w-full" disabled={isMobile() && !webcamStream}>
                         <Play className="w-4 h-4 mr-2" />
                         Start Recording
                     </Button>

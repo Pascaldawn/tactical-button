@@ -25,6 +25,8 @@ export default function RecordPage() {
 
     // Webcam video ref for compositing
     const webcamVideoRef = useRef<HTMLVideoElement>(null)
+    // Store the webcam stream
+    const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null)
 
     // For each DropdownMenu, add local open state and setOpen
     const [openTeamsDropdown, setOpenTeamsDropdown] = useState(false);
@@ -54,7 +56,7 @@ export default function RecordPage() {
                     <div className="flex flex-col w-full gap-4">
                         {/* Webcam Card at the top */}
                         <div className="w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden bg-white flex items-center justify-center mx-auto">
-                            <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
+                            <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} onStreamAvailable={setWebcamStream} />
                         </div>
                         {/* Tactics Board below webcam */}
                         <div className="w-full bg-[#22a745] rounded-lg p-2 flex items-center justify-center" style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)' }}>
@@ -76,7 +78,7 @@ export default function RecordPage() {
                         )}
                         {/* Recording Controls */}
                         <div className="w-full mt-2">
-                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} />
+                            <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} webcamStream={webcamStream} />
                         </div>
                     </div>
                 ) : (
@@ -97,7 +99,7 @@ export default function RecordPage() {
                         <div className="flex flex-col items-center w-full max-w-xs gap-6">
                             {/* Webcam Card at the top */}
                             <div className="w-56 h-56 rounded-full overflow-hidden bg-white flex items-center justify-center">
-                                <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} />
+                                <WebcamOverlay isRecording={isRecording} videoRef={webcamVideoRef} onStreamAvailable={setWebcamStream} />
                             </div>
                             {showTeamsPanel && (
                                 <div className="w-full flex justify-center mt-2">
@@ -108,7 +110,7 @@ export default function RecordPage() {
                             )}
                             {/* Recording Controls below buttons */}
                             <div className="w-full mt-2">
-                                <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} />
+                                <RecordingControls isRecording={isRecording} onRecordingChange={setIsRecording} webcamVideoRef={webcamVideoRef} webcamStream={webcamStream} />
                             </div>
                         </div>
                     </>
