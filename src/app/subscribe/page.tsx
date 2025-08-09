@@ -182,7 +182,7 @@ export default function SubscribePage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="text-center space-y-4">
+                {/* <div className="text-center space-y-4">
                     {user?.subscriptionStatus === 'active' ? (
                         <div className="space-y-4">
                             <div className="flex items-center justify-center space-x-2 text-green-600">
@@ -202,8 +202,8 @@ export default function SubscribePage() {
                                     </>
                                 ) : (
                                     <>
-                                        <ExternalLink className="w-4 h-4 mr-2" />
-                                        Manage Subscription
+                                        <ExternalLink className="w-4 h-4 mr-2" /> 
+                                         Manage Subscription
                                     </>
                                 )}
                             </Button>
@@ -223,7 +223,7 @@ export default function SubscribePage() {
                             )}
                         </Button>
                     )}
-                </div>
+                </div> */}
 
                 {/* Current Subscription Status */}
                 {user?.subscriptionStatus && (

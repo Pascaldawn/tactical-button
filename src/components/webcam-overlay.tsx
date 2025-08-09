@@ -9,9 +9,10 @@ interface WebcamOverlayProps {
     isRecording: boolean
     className?: string
     videoRef?: React.RefObject<HTMLVideoElement>
+    onStreamAvailable?: (stream: MediaStream) => void
 }
 
-export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverlayProps) {
+export function WebcamOverlay({ isRecording, className, videoRef, onStreamAvailable }: WebcamOverlayProps) {
     const [isWebcamOn, setIsWebcamOn] = useState(true) // default ON
     const [hasPermission, setHasPermission] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -49,6 +50,9 @@ export function WebcamOverlay({ isRecording, className, videoRef }: WebcamOverla
             console.log('Webcam stream obtained:', stream)
             streamRef.current = stream
             setHasPermission(true)
+            if (onStreamAvailable) {
+                onStreamAvailable(stream)
+            }
         } catch (err: unknown) {
             let userMessage = ''
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
