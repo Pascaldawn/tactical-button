@@ -35,13 +35,13 @@ export default function DashboardPage() {
                     <h1 className="text-2xl md:text-3xl font-bold">Welcome back, {user?.fullName}!</h1>
                     <p className="text-muted-foreground text-sm md:text-base">Ready to create some amazing tactical content?</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 md:gap-4">
+                {/* <div className="flex flex-wrap items-center gap-2 md:gap-4">
                     <Badge variant="secondary" className="flex items-center space-x-1">
                         <Zap className="w-3 h-3" />
                         <span>Pro Plan</span>
                     </Badge>
                     <Badge variant="outline">5 videos this month</Badge>
-                </div>
+                </div> */}
             </div>
 
             {/* Quick Actions */}
