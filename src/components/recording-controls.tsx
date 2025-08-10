@@ -441,6 +441,13 @@ export function RecordingControls({
         deleteRecordingBlob(RECORDING_KEY); // Remove from IndexedDB
     }
 
+    // Handler to discard the current recording and allow a new one
+    const handleRecordAgain = () => {
+        setRecordedBlob(null);
+        setRecordingTime(0);
+        deleteRecordingBlob(RECORDING_KEY);
+    };
+
     return (
         <div className="space-y-4">
             {/* Recording Timer */}
@@ -471,6 +478,10 @@ export function RecordingControls({
                         <Button onClick={handleDownload} variant="outline" className="w-full bg-transparent">
                             <Download className="w-4 h-4 mr-2" />
                             Download Recording
+                        </Button>
+                        <Button onClick={handleRecordAgain} variant="secondary" className="w-full">
+                            <Play className="w-4 h-4 mr-2" />
+                            Record Again
                         </Button>
                     </div>
                 )}
