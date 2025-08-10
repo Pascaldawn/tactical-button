@@ -50,7 +50,7 @@ export default function SubscribePage() {
       id: "pro",
       name: "Pro",
       price: "$59.99",
-      period: "month",
+      period: "yearly",
       description: "For professional teams and organizations",
       features: [
         "Everything in Basic",
