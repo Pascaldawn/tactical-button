@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Play, Users, Video, Zap } from "lucide-react"
+import { Play, Users, Video } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -45,11 +45,6 @@ export default function HomePage() {
               Start Creating
             </Button>
           </Link>
-          <Link href="/dashboard">
-            <Button size="lg" variant="outline" className="w-full sm:w-auto bg-transparent">
-              View Demo
-            </Button>
-          </Link>
         </div>
       </section>
 
@@ -59,8 +54,8 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-4">Everything You Need</h2>
           <p className="text-muted-foreground">Professional tools for modern football analysis</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card>
+        <div className="flex justify-center gap-8 flex-wrap max-w-4xl mx-auto">
+          <Card className="w-80">
             <CardHeader>
               <Users className="w-8 h-8 text-green-600 mb-2" />
               <CardTitle>Interactive Tactics Board</CardTitle>
@@ -69,21 +64,12 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
           </Card>
-          <Card>
+          <Card className="w-80">
             <CardHeader>
               <Video className="w-8 h-8 text-blue-600 mb-2" />
               <CardTitle>Webcam Recording</CardTitle>
               <CardDescription>
                 Record yourself explaining tactics with seamless webcam overlay integration.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Zap className="w-8 h-8 text-purple-600 mb-2" />
-              <CardTitle>Export & Share</CardTitle>
-              <CardDescription>
-                Export high-quality videos in multiple formats and share with your team instantly.
               </CardDescription>
             </CardHeader>
           </Card>
