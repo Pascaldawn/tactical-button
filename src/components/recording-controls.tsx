@@ -75,15 +75,21 @@ export function RecordingControls({
                 setRecordingTime(elapsed);
                 
                 if (elapsed >= maxRecordingTime) {
-                    handleStopRecording();
-                    toast.info("Recording stopped", { description: "Maximum recording time reached.", duration: 2000 });
+                    console.log('Recording timeout reached, stopping recording...');
+                    // Force stop recording when timeout is reached
+                    if (mediaRecorderRef.current && recordingActiveRef.current) {
+                        mediaRecorderRef.current.stop();
+                        recordingActiveRef.current = false;
+                        onRecordingChange(false);
+                        toast.info("Recording stopped", { description: "Maximum recording time (3 minutes) reached.", duration: 3000 });
+                    }
                 }
             }, 1000);
         }
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isRecording]);
+    }, [isRecording, onRecordingChange]);
 
     useEffect(() => {
         // On mount, try to restore recording from IndexedDB
@@ -379,11 +385,34 @@ export function RecordingControls({
         recordedChunksRef.current = [];
         recordingActiveRef.current = true;
         recordingStartTimeRef.current = Date.now();
+        setRecordingTime(0); // Reset timer
         
-        if (isMobile()) {
-            await startMobileRecording();
-        } else {
-            await startDesktopRecording();
+        // Add a safety timeout as backup (3 minutes + 5 seconds)
+        const safetyTimeout = setTimeout(() => {
+            if (recordingActiveRef.current && mediaRecorderRef.current) {
+                console.log('Safety timeout triggered, forcing recording stop...');
+                mediaRecorderRef.current.stop();
+                recordingActiveRef.current = false;
+                onRecordingChange(false);
+                toast.warning("Recording stopped by safety timeout", { description: "Recording exceeded maximum time limit.", duration: 3000 });
+            }
+        }, (maxRecordingTime + 5) * 1000);
+        
+        try {
+            if (isMobile()) {
+                await startMobileRecording();
+            } else {
+                await startDesktopRecording();
+            }
+            
+            // Clear safety timeout if recording starts successfully
+            clearTimeout(safetyTimeout);
+        } catch (error) {
+            console.error('Recording start error:', error);
+            recordingActiveRef.current = false;
+            onRecordingChange(false);
+            clearTimeout(safetyTimeout);
+            throw error;
         }
     }
 
@@ -394,6 +423,7 @@ export function RecordingControls({
     const handleStopRecording = () => {
         if (mediaRecorderRef.current && recordingActiveRef.current) {
             mediaRecorderRef.current.stop();
+            recordingActiveRef.current = false; // Ensure flag is reset
             onRecordingChange(false);
             toast.success("Recording stopped", { 
                 description: "Your video is ready for download.", 

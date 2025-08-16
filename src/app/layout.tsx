@@ -24,6 +24,20 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             {children}
+            {/* Global Footer */}
+            <footer className="border-t bg-background/80 backdrop-blur-sm py-6 mt-auto">
+              <div className="container mx-auto px-4 text-center text-muted-foreground">
+                <p className="text-sm">
+                  Need help? Contact our support team at{" "}
+                  <a 
+                    href="mailto:support@tacticalbutton.com" 
+                    className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 underline"
+                  >
+                    support@tacticalbutton.com
+                  </a>
+                </p>
+              </div>
+            </footer>
             <Toaster /> {/* ✅ Correctly renders toast notifications */}
           </AuthProvider>
         </ThemeProvider>
