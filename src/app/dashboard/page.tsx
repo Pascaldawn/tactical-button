@@ -28,7 +28,7 @@ export default function DashboardPage() {
     ]
 
     return (
-        <div className="space-y-6 md:space-y-8 max-w-7xl mx-auto">
+        <div className="space-y-6 md:space-y-8 max-w-7xl mx-auto" data-record-page>
             {/* Welcome Section */}
             <div className="flex flex-col space-y-4">
                 <div>
@@ -69,6 +69,8 @@ export default function DashboardPage() {
                     ))}
                 </div>
             </div>
+            
+
         </div>
     )
 }

@@ -36,7 +36,7 @@ export default function RecordPage() {
 
     return (
         <TacticsBoardProvider>
-            <div data-record-page className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4" data-record-page>
                 {isRecording && (
                     <div style={{
                         position: 'fixed',
@@ -116,6 +116,8 @@ export default function RecordPage() {
                     </>
                 )}
             </div>
+            
+
         </TacticsBoardProvider>
     )
 }

@@ -102,7 +102,7 @@ export default function SubscribePage() {
       console.error("Subscription error:", error);
       toast.error("Failed to start subscription process", {
         description:
-          error.response?.data?.error || "Please try again or contact support.",
+          error.response?.data?.error || "Please try again or contact our support team.",
       });
     } finally {
       setIsLoading(false);
@@ -131,7 +131,7 @@ export default function SubscribePage() {
       console.error("Portal error:", error);
       toast.error("Failed to open customer portal", {
         description:
-          error.response?.data?.error || "Please try again or contact support.",
+          error.response?.data?.error || "Please try again or contact our support team.",
       });
     } finally {
       setIsLoading(false);
@@ -140,7 +140,7 @@ export default function SubscribePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
-      <div className="container mx-auto py-8 md:py-12 max-w-6xl">
+      <div className="container mx-auto py-8 md:py-12 max-w-4xl" data-record-page>
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Choose Your Plan
@@ -291,6 +291,8 @@ export default function SubscribePage() {
             🔒 Secure payment processing by Polar.sh
           </p>
         </div>
+        
+
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Home, Users, Video, CreditCard, Settings, LogOut, Play, ChevronUp } from "lucide-react"
+import { Home, Users, Video, CreditCard, LogOut, Play, ChevronUp } from "lucide-react"
 
 const navigationItems = [
     {
@@ -100,10 +100,6 @@ export function DashboardSidebar() {
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                                <DropdownMenuItem>
-                                    <Settings className="w-4 h-4 mr-2" />
-                                    Settings
-                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={logout}>
                                     <LogOut className="w-4 h-4 mr-2" />
                                     Logout
@@ -111,6 +107,7 @@ export function DashboardSidebar() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
+
                 </SidebarMenu>
             </SidebarFooter>
             <SidebarRail />
