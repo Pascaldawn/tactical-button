@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4" data-record-page>
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -122,18 +122,20 @@ export default function ForgotPasswordPage() {
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Sending..." : "Send reset link"}
+                            {isLoading ? "Sending..." : "Send Reset Link"}
                         </Button>
                     </form>
-                    <div className="mt-6 text-center">
-                        <Link href="/auth/login">
-                            <Button variant="ghost" className="w-full">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Back to login
-                            </Button>
-                        </Link>
-                    </div>
+                    
+
                 </CardContent>
+                <div className="mt-6 text-center">
+                    <Link href="/auth/login">
+                        <Button variant="ghost" className="w-full">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to login
+                        </Button>
+                    </Link>
+                </div>
             </Card>
         </div>
     )

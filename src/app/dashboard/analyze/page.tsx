@@ -15,7 +15,7 @@ export default function AnalyzePage() {
 
     return (
         <TacticsBoardProvider>
-            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4">
+            <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full min-h-screen py-8 px-4" data-record-page>
                 {isMobile ? (
                     // Mobile Layout
                     <div className="flex flex-col w-full gap-4">
@@ -65,6 +65,8 @@ export default function AnalyzePage() {
                     </>
                 )}
             </div>
+            
+
         </TacticsBoardProvider>
     )
 }

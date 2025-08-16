@@ -65,7 +65,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4" data-record-page>
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -133,6 +133,9 @@ export default function RegisterPage() {
                             {isLoading ? "Creating account..." : "Create account"}
                         </Button>
                     </form>
+                    
+
+                    
                     <div className="mt-6 text-center">
                         <p className="text-sm text-muted-foreground">
                             Already have an account?{" "}

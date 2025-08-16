@@ -41,7 +41,7 @@ export default function DashboardLayout({
                 <DashboardSidebar />
                 <SidebarInset className="flex-1 flex flex-col min-w-0">
                     <DashboardHeader />
-                    <main className="flex-1 p-4 md:p-6 overflow-auto">{children}</main>
+                    <main className="flex-1 p-4 md:p-6 overflow-auto" data-record-page>{children}</main>
                 </SidebarInset>
             </div>
         </SidebarProvider>

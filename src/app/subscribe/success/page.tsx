@@ -107,7 +107,7 @@ function SubscribeSuccessContent() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
-            <div className="container mx-auto py-8 md:py-12 max-w-2xl">
+            <div className="container mx-auto py-8 md:py-12 max-w-2xl" data-record-page>
                 <div className="text-center">
                     {/* Success Icon */}
                     <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
@@ -166,9 +166,6 @@ function SubscribeSuccessContent() {
                     <div className="mt-8 text-sm text-muted-foreground">
                         <p>
                             You can manage your subscription anytime from your account settings.
-                        </p>
-                        <p className="mt-2">
-                            Need help? Contact our support team at support@example.com
                         </p>
                     </div>
                 </div>

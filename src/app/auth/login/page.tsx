@@ -64,7 +64,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 p-4" data-record-page>
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -124,18 +124,20 @@ export default function LoginPage() {
                             </Link>
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? "Signing in..." : "Sign in"}
+                            {isLoading ? "Signing in..." : "Sign In"}
                         </Button>
                     </form>
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            {"Don't have an account? "}
-                            <Link href="/auth/register" className="text-primary hover:underline">
-                                Sign up
-                            </Link>
-                        </p>
-                    </div>
+                    
+
                 </CardContent>
+                <div className="mt-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                        {"Don't have an account? "}
+                        <Link href="/auth/register" className="text-primary hover:underline">
+                            Sign up
+                        </Link>
+                    </p>
+                </div>
             </Card>
         </div>
     )
